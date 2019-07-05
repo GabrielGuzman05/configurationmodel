@@ -1,4 +1,74 @@
+<h1 class="text-center">XmltoSvg Prototype</h1>
+<div class="row mt-3 ml-2 m-0">
+    <div class="col">
+        <h3>Opciones: </h3>
+    </div>
+    <div class="col">
+        <input #algoBasico type='file' class="btn btn-success" accept='text/xml' onchange='openFile(event)'>
+    </div>
+    <div class="col">
+        <button class="btn btn-success" (click)="onClick()"> Crear SVG</button>
+    </div>
+</div>
+<br>
 
-<input type='file' accept='text/xml' (change)="openFile($event)">
 
+<div class="row m-0 mx-1">
+    <div class="col-4">
+        <h4>XML:</h4>
+        <textarea id="xmlArea" cols="40" rows="10">
+            Seleccione archivo...                        
+        </textarea>
+    </div>
+    <div class="col-4">
+        <h4>JSON:</h4>
+        <textarea #jsonFeature
+          		  id="jsonArea"
+          		  cols="40"
+          		  rows="10">  		  	
+	  	</textarea>
+    </div>
+    <div class="col-4">
+        <h4>Datos importantes:</h4>
+        <textarea id="jsonArea2" cols="40" rows="10"></textarea>
+    </div>
+</div>
+<div class="row m-0">
+    <div class="col text-center" id="svgdiv">
+        <div id="svgcanvas"></div>
+    </div>
+</div>
+
+<div>
+	<mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+	  <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
+	    <button mat-icon-button disabled></button>
+	    <mat-checkbox class="checklist-leaf-node"
+	                  [checked]="checklistSelection.isSelected(node)"
+	                  (change)="todoLeafItemSelectionToggle(node)">{{node.item}}</mat-checkbox>
+	  </mat-tree-node>
+
+	  <mat-tree-node *matTreeNodeDef="let node; when: hasNoContent" matTreeNodePadding>
+	    <button mat-icon-button disabled></button>
+	    <mat-form-field>
+	      <input matInput #itemValue placeholder="New item...">
+	    </mat-form-field>
+	    <button mat-button (click)="saveNode(node, itemValue.value)">Save</button>
+	  </mat-tree-node>
+
+	  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
+	    <button mat-icon-button matTreeNodeToggle
+	            [attr.aria-label]="'toggle ' + node.filename">
+	      <mat-icon class="mat-icon-rtl-mirror">
+	        {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+	      </mat-icon>
+	    </button>
+	    <mat-checkbox [checked]="descendantsAllSelected(node)"
+	                  [indeterminate]="descendantsPartiallySelected(node)"
+	                  (change)="todoItemSelectionToggle(node)">{{node.item}}</mat-checkbox>
+	    <button mat-icon-button (click)="addNewItem(node)"><mat-icon>add</mat-icon></button>
+	  </mat-tree-node>
+	</mat-tree>
+
+</div>
 <router-outlet></router-outlet>

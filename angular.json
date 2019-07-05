@@ -29,7 +29,12 @@
             "styles": [
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "src/assets/js/script.js",
+              "src/assets/js/svg.js",
+              "src/assets/js/xml2json.js",
+              "src/assets/js/xml2json.min.js"
+            ]
           },
           "configurations": {
             "production": {
