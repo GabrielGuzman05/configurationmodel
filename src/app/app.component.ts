@@ -155,8 +155,6 @@ export class AppComponent {
     this.dataSource = new MatTreeFlatDataSource(this.treeControl, this.treeFlattener);
 
     database.dataChange.subscribe(data => {
-      console.log("hola")
-      console.log(data)
       this.dataSource.data = data;
     });
   }
@@ -164,9 +162,6 @@ export class AppComponent {
   onClick() {
     buildJson();
     this.jsonGenerado = JSON.parse(this.jsonFeature.nativeElement.value);
-    console.log(this.jsonGenerado);
-    console.log(this.jsonGenerado.ADOXML.MODELS)
-
     this.configurarJSON();
   }
 
@@ -310,25 +305,48 @@ export class AppComponent {
   */
   configurarJSON() {
     this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE.forEach((instancia) => {
-      console.log(instancia);
       instancia.id = parseInt(instancia._id.split('.')[1])
       instancia.padre = parseInt(instancia.ATTRIBUTE[4].__text);
     });
-    console.log(this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE)
-    this.construirArbol()    
+    let json = {};
+    json[this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE[0]._name] = {};
+    this.construirArbol(this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE,
+                        json,
+                        this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE[0]._name,
+                        this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE[0].id);    
   }
 
-  construirArbol() {
-    let json = {};
-    this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE.forEach((instancia) => {
-      console.log(instancia.padre)
-      if (!instancia.padre) {
-        json[instancia._name] = {};
+  construirArbol(arrayJson, json, nombre, id) {
+    //json[nombre] = {};
+    let existe: boolean = false;
+    let arreglo = [];
+    arrayJson.forEach((instancia) => {
+      if (instancia._name === "Camera" || instancia._name === "Media" || instancia._name === "MP3") {
+        console.log(instancia)
+       
       }
-
-    console.log(json)  
+       if (!instancia.padre) {
+        console.log(instancia._name)
+      }
+      if (instancia.padre === id) {
+        existe = true;
+        json[nombre][instancia._name] = {};
+        arreglo.push({
+          nombre: instancia._name,
+          id: instancia.id
+        })
+        this.construirArbol(arrayJson, json[nombre], instancia._name, instancia.id);
+      }  
     });
 
+    if (!existe) {
+      json[nombre] = null;
+    }
+    
+    // Mostrar árbol
+    const data = this.database.buildFileTree(json, 0);
+    // Notify the change.
+    this.database.dataChange.next(data);
   }
 
   /*
