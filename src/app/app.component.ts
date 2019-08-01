@@ -119,6 +119,7 @@ export class ChecklistDatabase {
 export class AppComponent {
   title = 'ConfigurationModel';
   jsonGenerado: any;
+  jsonCompleto = {};
 
   @ViewChild('jsonFeature') jsonFeature: any;
   //xml = `<note><to>User</to><from>Library</from><heading>Message</heading><body>Some XML to convert to JSON!</body></note>`;
@@ -304,6 +305,40 @@ export class AppComponent {
 };
   */
   configurarJSON() {
+    let instancias = JSON.parse(localStorage.getItem('datos'));
+    console.log(instancias)
+
+    this.jsonCompleto[instancias[0][0]] = {};
+
+    for ( let i = 1; i < instancias.length; i++ ) {
+      this.construir(this.jsonCompleto, instancias[0][0], instancias);
+    }
+
+    /*
+    instancias.forEach((instancia, index) => {
+      console.log(index)
+      if ( !instancia[2] && index === 0 ) {
+        jsonCompleto[instancia[0]] = {};
+      } else {
+        let tienePadre = false;
+        for (let key in jsonCompleto) {
+          console.log(key)
+          console.log(jsonCompleto[key])
+          if ( key === instancia[3] ) {
+            tienePadre = true;
+          }
+        }
+
+        if ( tienePadre ) {
+          jsonCompleto[instancia[3]][instancia[0]] = {}; 
+        } else {
+          jsonCompleto[instancia[0]] = {};
+        } 
+      }
+    });
+
+    console.log(jsonCompleto)
+    
     this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE.forEach((instancia) => {
       instancia.id = parseInt(instancia._id.split('.')[1])
       instancia.padre = parseInt(instancia.ATTRIBUTE[4].__text);
@@ -314,6 +349,30 @@ export class AppComponent {
                         json,
                         this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE[0]._name,
                         this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE[0].id);    
+    */
+  }
+
+  construir(arrayJson, padre, instancias) {
+    let indices = [];
+
+    for ( let i = 1; i < instancias.length; i++ ) {
+      if ( instancias[i][3] && padre === instancias[i][3] ) {
+        console.log(arrayJson)
+        console.log(padre)
+        console.log(instancias[i][0])
+        arrayJson[padre][instancias[i][0]] = {};
+        indices.push(i);
+      }  
+    }
+
+    for ( let j = 0; j < indices.length; j++ ) {
+      this.construir(arrayJson[padre], instancias[indices[j]][0], instancias);  
+    }
+    
+    console.log(arrayJson)
+    const data = this.database.buildFileTree(this.jsonCompleto, 0);
+    // Notify the change.
+    this.database.dataChange.next(data);
   }
 
   construirArbol(arrayJson, json, nombre, id) {
@@ -343,6 +402,7 @@ export class AppComponent {
       json[nombre] = null;
     }
     
+    console.log(json)
     // Mostrar árbol
     const data = this.database.buildFileTree(json, 0);
     // Notify the change.

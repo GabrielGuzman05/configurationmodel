@@ -53,6 +53,7 @@ function buildJson() {
                     var comparef = instances[k][0].localeCompare(instances[j][3]);
                     if (comparef == 0) {
                         instances[j][4] = instances[k][1];
+                                                    console.log(instances)
 
                         var optional = instances[j][2].localeCompare("Optional");
                         var mandatory = instances[j][2].localeCompare("Mandatory");
@@ -188,4 +189,5 @@ function buildJson() {
     }
     svgPrint.appendChild(svg);
     $("#jsonArea2").val(info);
+    localStorage.setItem('datos', JSON.stringify(instances));
 }
