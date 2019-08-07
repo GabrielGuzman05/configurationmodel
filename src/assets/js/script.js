@@ -53,7 +53,6 @@ function buildJson() {
                     var comparef = instances[k][0].localeCompare(instances[j][3]);
                     if (comparef == 0) {
                         instances[j][4] = instances[k][1];
-                        console.log(instances)
 
                         var optional = instances[j][2].localeCompare("Optional");
                         var mandatory = instances[j][2].localeCompare("Mandatory");
@@ -128,7 +127,6 @@ function buildJson() {
     } var cont = 0;
     for (var i = 0; i < ors.length; i++) {
         if (ors[i][5] == false) {
-            console.log(ors);
             var poligono = new Array();
             var pos = ors[i][1].split(":");
             let x = 55 * parseInt(pos[1].split("cm"));
@@ -175,18 +173,17 @@ function buildJson() {
                 }
                 if (j == (ors.length - 1)) {
                     cont++;
-                    console.log("conteo: " + cont)
                     xors.push(poligono);
                 }
             }
-            //console.log(poligono);
 
         }
     }
-    console.log(xors);
+
     for (var i = 0; i < xors.length; i++) {
         svg.appendChild(orxorsvg(xors[i]));
     }
+
     svgPrint.appendChild(svg);
     $("#jsonArea2").val(info);
     localStorage.setItem('datos', JSON.stringify(instances));

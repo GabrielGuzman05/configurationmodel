@@ -1,9 +1,8 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { FlatTreeControl } from '@angular/cdk/tree';
-import { Component, Injectable, ViewChild } from '@angular/core';
+import { Component, Injectable } from '@angular/core';
 import { MatTreeFlatDataSource, MatTreeFlattener } from '@angular/material/tree';
 import { BehaviorSubject } from 'rxjs';
-import { NgxXml2jsonService } from 'ngx-xml2json';
 
 declare var buildJson: any;
 /**
@@ -24,23 +23,7 @@ export class TodoItemFlatNode {
 /**
  * The Json object for to-do list data.
  */
-const TREE_DATA = {
-  Groceries: {
-    'Almond Meal flour': null,
-    'Organic eggs': null,
-    'Protein Powder': null,
-    Fruits: {
-      Apple: null,
-      Berries: ['Blueberry', 'Raspberry'],
-      Orange: null
-    }
-  },
-  Reminders: [
-    'Cook dinner',
-    'Read the Material Design spec',
-    'Upgrade Application to Angular'
-  ]
-};
+const TREE_DATA = {};
 
 /**
  * Checklist database, it can build a tree structured Json object.
@@ -74,7 +57,6 @@ export class ChecklistDatabase {
    * The return value is the list of `TodoItemNode`.
    */
   buildFileTree(obj: {[key: string]: any}, level: number): TodoItemNode[] {
-    //console.log(obj)
     return Object.keys(obj).reduce<TodoItemNode[]>((accumulator, key) => {
       const value = obj[key];
       const node = new TodoItemNode();
@@ -91,23 +73,6 @@ export class ChecklistDatabase {
       return accumulator.concat(node);
     }, []);
   }
-
-  /** Add an item to to-do list */
-  insertItem(parent: TodoItemNode, name: string) {
-    if (parent.children) {
-      parent.children.push({item: name} as TodoItemNode);
-      this.dataChange.next(this.data);
-    }
-  }
-
-  updateItem(node: TodoItemNode, name: string) {
-    node.item = name;
-    this.dataChange.next(this.data);
-  }
-
-  changeCompleteTree(data) {
-    this.dataChange.next(data);
-  }
 }
 
 @Component({
@@ -117,15 +82,9 @@ export class ChecklistDatabase {
   providers: [ChecklistDatabase]
 })
 export class AppComponent {
-  title = 'ConfigurationModel';
-  jsonGenerado: any;
+  title = 'Propuesta de modelos de configuración';
   jsonCompleto = {};
-
-  @ViewChild('jsonFeature') jsonFeature: any;
-  //xml = `<note><to>User</to><from>Library</from><heading>Message</heading><body>Some XML to convert to JSON!</body></note>`;
-
-  public xml = '';
-  public formulario = true;
+  restricciones = [];
 
   /** Map from flat node to nested node. This helps us finding the nested node to be modified */
   flatNodeMap = new Map<TodoItemFlatNode, TodoItemNode>();
@@ -136,9 +95,6 @@ export class AppComponent {
   /** A selected parent node to be inserted */
   selectedParent: TodoItemFlatNode | null = null;
 
-  /** The new item's name */
-  newItemName = '';
-
   treeControl: FlatTreeControl<TodoItemFlatNode>;
 
   treeFlattener: MatTreeFlattener<TodoItemNode, TodoItemFlatNode>;
@@ -148,8 +104,7 @@ export class AppComponent {
   /** The selection for checklist */
   checklistSelection = new SelectionModel<TodoItemFlatNode>(true /* multiple */);
 
-  constructor(private ngxXml2jsonService: NgxXml2jsonService,
-              private database: ChecklistDatabase) {
+  constructor(private database: ChecklistDatabase) {
     this.treeFlattener = new MatTreeFlattener(this.transformer, this.getLevel,
     this.isExpandable, this.getChildren);
     this.treeControl = new FlatTreeControl<TodoItemFlatNode>(this.getLevel, this.isExpandable);
@@ -162,7 +117,6 @@ export class AppComponent {
 
   onClick() {
     buildJson();
-    this.jsonGenerado = JSON.parse(this.jsonFeature.nativeElement.value);
     this.configurarJSON();
   }
 
@@ -194,6 +148,9 @@ export class AppComponent {
 
   /** Whether all the descendants of the node are selected. */
   descendantsAllSelected(node: TodoItemFlatNode): boolean {
+    console.log("descendantsAll")
+    console.log(node)
+
     const descendants = this.treeControl.getDescendants(node);
     const descAllSelected = descendants.every(child =>
       this.checklistSelection.isSelected(child)
@@ -203,6 +160,9 @@ export class AppComponent {
 
   /** Whether part of the descendants are selected */
   descendantsPartiallySelected(node: TodoItemFlatNode): boolean {
+    console.log("descendantsPartially")
+    console.log(node)
+
     const descendants = this.treeControl.getDescendants(node);
     const result = descendants.some(child => this.checklistSelection.isSelected(child));
     return result && !this.descendantsAllSelected(node);
@@ -210,6 +170,8 @@ export class AppComponent {
 
   /** Toggle the to-do item selection. Select/deselect all the descendants node */
   todoItemSelectionToggle(node: TodoItemFlatNode): void {
+    console.log("todoItem")
+    console.log(node)
     this.checklistSelection.toggle(node);
     const descendants = this.treeControl.getDescendants(node);
     this.checklistSelection.isSelected(node)
@@ -225,6 +187,8 @@ export class AppComponent {
 
   /** Toggle a leaf to-do item selection. Check all the parents to see if they changed */
   todoLeafItemSelectionToggle(node: TodoItemFlatNode): void {
+    console.log("todoLeaf")
+    console.log(node)
     this.checklistSelection.toggle(node);
     this.checkAllParentsSelection(node);
   }
@@ -272,27 +236,26 @@ export class AppComponent {
     return null;
   }
 
-  /** Select the category so we can insert the new item. */
-  addNewItem(node: TodoItemFlatNode) {
-    const parentNode = this.flatNodeMap.get(node);
-    this.database.insertItem(parentNode!, '');
-    this.treeControl.expand(node);
-  }
-
-  /** Save the node to database */
-  saveNode(node: TodoItemFlatNode, itemValue: string) {
-    const nestedNode = this.flatNodeMap.get(node);
-    this.database.updateItem(nestedNode!, itemValue);
-  }
-
   configurarJSON() {
     let instancias = JSON.parse(localStorage.getItem('datos'));
-    console.log(instancias)
 
     this.jsonCompleto[instancias[0][0]] = {};
 
     for ( let i = 1; i < instancias.length; i++ ) {
       this.construir(this.jsonCompleto, instancias[0][0], instancias);
+    }
+
+    this.construirRestricciones(instancias);
+  }
+
+  construirRestricciones(instancias) {
+    for ( let i = 0; i < instancias.length; i++ ) {
+      let instancia = {
+        nodo: instancias[i][0],
+        atributo: instancias[i][2],
+        nodoAtributo: instancias[i][3] 
+      }
+      this.restricciones.push(instancia);
     }
   }
 
@@ -301,11 +264,7 @@ export class AppComponent {
 
     for ( let i = 1; i < instancias.length; i++ ) {
       if ( instancias[i][3] && padre === instancias[i][3] ) {
-        console.log(arrayJson)
-        console.log(padre)
-        console.log(instancias[i][0])
         arrayJson[padre][instancias[i][0]] = {};
-        //arrayJson[padre]['algo'] = "algo";
         indices.push(i);
       }  
     }
@@ -318,16 +277,10 @@ export class AppComponent {
       this.construir(arrayJson[padre], instancias[indices[j]][0], instancias);  
     }
     
-    console.log(arrayJson)
     this.crearArbol();
   }
 
   crearArbol(){
-
-    console.log(this.jsonCompleto)
-
-
-
     const data = this.database.buildFileTree(this.jsonCompleto, 0);
     
     // Notify the change.

@@ -213,28 +213,23 @@ function orxorsvg (xors){
     xors[4] += 75;
     var xls, xrs, ys;
     if(xors[3]<xors[5]){
-        console.log("ylmenor");        
         xls = (xors[0] - xors[2])/2 + xors[2];
         xrs = (xors[0] - xors[2])/2 + xors[0];
         ys = (xors[3] - xors[1])/2 + xors[1];
-        console.log("y " + xors[1] + " ys " + ys + " yl " + xors[3] + " yr " + xors[5] + " xl " + xors[2] + " xr " + xors[4] + " x " + xors[0] + " xls " + xls + " xrs " + xrs);
     }
+
     if(xors[5]<xors[3]){
-        console.log("yrmenor");
-        //console.log("yl " + yl + " yr " + yr);
         xls = (xors[4] - xors[0])/2 + xors[0];
         xrs = (xors[4] - xors[0])/2 + xors[0];
         ys = (xors[5] - xors[1])/2 + xors[1];
     }
+
     if(xors[5] == xors[3]){
-        console.log("iguales");
         xls = (xors[0] - xors[2])/2 + xors[2];
         xrs = (xors[4] - xors[0])/2 + xors[0];
         ys = (xors[5] - xors[1])/2 + xors[1];
     }
     
-    
-   // console.log("x " + x + " y " + y + " ys " + ys + " xl: " + xls + " xrs " + xrs);
     var polygon = document.createElementNS('http://www.w3.org/2000/svg','polygon');
     polygon.setAttribute("points", xors[0] + "," + xors[1] + " " + xls+","+ys+" "+xrs+","+ ys);
     polygon.setAttribute('stroke', "black");
