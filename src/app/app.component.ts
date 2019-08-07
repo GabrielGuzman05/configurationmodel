@@ -285,25 +285,6 @@ export class AppComponent {
     this.database.updateItem(nestedNode!, itemValue);
   }
 
-  /*
-  const TREE_DATA = {
-  Groceries: {
-    'Almond Meal flour': null,
-    'Organic eggs': null,
-    'Protein Powder': null,
-    Fruits: {
-      Apple: null,
-      Berries: ['Blueberry', 'Raspberry'],
-      Orange: null
-    }
-  },
-  Reminders: [
-    'Cook dinner',
-    'Read the Material Design spec',
-    'Upgrade Application to Angular'
-  ]
-};
-  */
   configurarJSON() {
     let instancias = JSON.parse(localStorage.getItem('datos'));
     console.log(instancias)
@@ -313,43 +294,6 @@ export class AppComponent {
     for ( let i = 1; i < instancias.length; i++ ) {
       this.construir(this.jsonCompleto, instancias[0][0], instancias);
     }
-
-    /*
-    instancias.forEach((instancia, index) => {
-      console.log(index)
-      if ( !instancia[2] && index === 0 ) {
-        jsonCompleto[instancia[0]] = {};
-      } else {
-        let tienePadre = false;
-        for (let key in jsonCompleto) {
-          console.log(key)
-          console.log(jsonCompleto[key])
-          if ( key === instancia[3] ) {
-            tienePadre = true;
-          }
-        }
-
-        if ( tienePadre ) {
-          jsonCompleto[instancia[3]][instancia[0]] = {}; 
-        } else {
-          jsonCompleto[instancia[0]] = {};
-        } 
-      }
-    });
-
-    console.log(jsonCompleto)
-    
-    this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE.forEach((instancia) => {
-      instancia.id = parseInt(instancia._id.split('.')[1])
-      instancia.padre = parseInt(instancia.ATTRIBUTE[4].__text);
-    });
-    let json = {};
-    json[this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE[0]._name] = {};
-    this.construirArbol(this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE,
-                        json,
-                        this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE[0]._name,
-                        this.jsonGenerado.ADOXML.MODELS.MODEL.INSTANCE[0].id);    
-    */
   }
 
   construir(arrayJson, padre, instancias) {
@@ -361,8 +305,13 @@ export class AppComponent {
         console.log(padre)
         console.log(instancias[i][0])
         arrayJson[padre][instancias[i][0]] = {};
+        //arrayJson[padre]['algo'] = "algo";
         indices.push(i);
       }  
+    }
+
+    if ( indices.length === 0 ) {
+      arrayJson[padre] = null;
     }
 
     for ( let j = 0; j < indices.length; j++ ) {
@@ -370,103 +319,18 @@ export class AppComponent {
     }
     
     console.log(arrayJson)
+    this.crearArbol();
+  }
+
+  crearArbol(){
+
+    console.log(this.jsonCompleto)
+
+
+
     const data = this.database.buildFileTree(this.jsonCompleto, 0);
+    
     // Notify the change.
     this.database.dataChange.next(data);
   }
-
-  construirArbol(arrayJson, json, nombre, id) {
-    //json[nombre] = {};
-    let existe: boolean = false;
-    let arreglo = [];
-    arrayJson.forEach((instancia) => {
-      if (instancia._name === "Camera" || instancia._name === "Media" || instancia._name === "MP3") {
-        console.log(instancia)
-       
-      }
-       if (!instancia.padre) {
-        console.log(instancia._name)
-      }
-      if (instancia.padre === id) {
-        existe = true;
-        json[nombre][instancia._name] = {};
-        arreglo.push({
-          nombre: instancia._name,
-          id: instancia.id
-        })
-        this.construirArbol(arrayJson, json[nombre], instancia._name, instancia.id);
-      }  
-    });
-
-    if (!existe) {
-      json[nombre] = null;
-    }
-    
-    console.log(json)
-    // Mostrar árbol
-    const data = this.database.buildFileTree(json, 0);
-    // Notify the change.
-    this.database.dataChange.next(data);
-  }
-
-  /*
-  openFile(event) {
-  	let input = event; // Remove: .target;
-    console.log(input)
-
-    let fileList = event.target.files;
-    console.log(fileList)
-    
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(this.xml, 'text/xml');
-    const obj = this.ngxXml2jsonService.xmlToJson(xml);
-    console.log(obj);
-    /*
-    if(fileList.length > 0) {
-        let file: File = fileList[0];
-        let formData:FormData = new FormData();
-        formData.append('uploadFile', file, file.name);
-        let headers = new Headers();
-        /** In Angular 5, including the header Content-Type can invalidate your request
-        headers.append('Content-Type', 'multipart/form-data');
-        headers.append('Accept', 'application/json');
-        let options = new RequestOptions({ headers: headers });
-        this.http.post(`${this.apiEndPoint}`, formData, options)
-            .map(res => res.json())
-            .catch(error => Observable.throw(error))
-            .subscribe(
-                data => console.log('success'),
-                error => console.log(error)
-            )
-    }
-	}
-
-  subir() {
-    let parseString = require('xml2js').parseString;
-    let xml;
-    let a = parseString(this.xml, function (err, result) {
-      xml = result;
-    });
-    console.log(xml)
-
-    console.log(xml.ADOXML.MODELS[0].MODEL[0].INSTANCE)
-    //this.database.changeCompleteTree(xml.ADOXML.MODELS[0].INSTANCE);
-    //this.database.dataChange.next(xml.ADOXML.MODELS[0].INSTANCE);
-    
-    //this.database.changeCompleteTree(xml.ADOXML.MODELS[0].MODEL[0].INSTANCE)
-    const data = this.database.buildFileTree(xml.ADOXML.MODELS[0].MODEL[0].INSTANCE, 0);
-
-    // Notify the change.
-    this.database.dataChange.next(data);
-    /*
-    this.database.dataChange.subscribe(data => {
-      this.dataSource.data = xml.ADOXML.MODELS[0].INSTANCE;
-    });
-    
-    //this.dataSource.data = xml.ADOXML.MODELS[0].INSTANCE;
-    
-    this.formulario = false;
-
-
-  } */
 }

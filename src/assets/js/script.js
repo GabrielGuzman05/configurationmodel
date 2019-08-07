@@ -53,7 +53,7 @@ function buildJson() {
                     var comparef = instances[k][0].localeCompare(instances[j][3]);
                     if (comparef == 0) {
                         instances[j][4] = instances[k][1];
-                                                    console.log(instances)
+                        console.log(instances)
 
                         var optional = instances[j][2].localeCompare("Optional");
                         var mandatory = instances[j][2].localeCompare("Mandatory");
