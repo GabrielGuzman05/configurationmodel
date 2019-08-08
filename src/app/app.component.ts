@@ -18,6 +18,7 @@ export class TodoItemFlatNode {
   item: string;
   level: number;
   expandable: boolean;
+  constraint: string;
 }
 
 /**
@@ -122,6 +123,8 @@ export class AppComponent {
 
   getLevel = (node: TodoItemFlatNode) => node.level;
 
+  getConstraint = (node: TodoItemFlatNode) => node.constraint;
+
   isExpandable = (node: TodoItemFlatNode) => node.expandable;
 
   getChildren = (node: TodoItemNode): TodoItemNode[] => node.children;
@@ -133,6 +136,7 @@ export class AppComponent {
   /**
    * Transformer to convert nested node to flat node. Record the nodes in maps for later use.
    */
+
   transformer = (node: TodoItemNode, level: number) => {
     const existingNode = this.nestedNodeMap.get(node);
     const flatNode = existingNode && existingNode.item === node.item
@@ -140,17 +144,32 @@ export class AppComponent {
         : new TodoItemFlatNode();
     flatNode.item = node.item;
     flatNode.level = level;
+    flatNode.constraint = null;
     flatNode.expandable = !!node.children;
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
+     
+    this.aplicarRestricciones(flatNode);
+
     return flatNode;
+  }
+
+  aplicarRestricciones(node: TodoItemFlatNode) {
+    this.restricciones.forEach((restriccion) => {
+      if ( restriccion['nodo'] === node.item ) {
+        node.constraint = restriccion['atributo'];
+
+        // Último cambio, pero no funciona por el momento
+        if ( node.constraint === 'Mandatory' ) {
+          this.checklistSelection.isSelected(node);
+        }
+      }
+    });
   }
 
   /** Whether all the descendants of the node are selected. */
   descendantsAllSelected(node: TodoItemFlatNode): boolean {
-    console.log("descendantsAll")
     console.log(node)
-
     const descendants = this.treeControl.getDescendants(node);
     const descAllSelected = descendants.every(child =>
       this.checklistSelection.isSelected(child)
@@ -160,9 +179,6 @@ export class AppComponent {
 
   /** Whether part of the descendants are selected */
   descendantsPartiallySelected(node: TodoItemFlatNode): boolean {
-    console.log("descendantsPartially")
-    console.log(node)
-
     const descendants = this.treeControl.getDescendants(node);
     const result = descendants.some(child => this.checklistSelection.isSelected(child));
     return result && !this.descendantsAllSelected(node);
@@ -170,8 +186,6 @@ export class AppComponent {
 
   /** Toggle the to-do item selection. Select/deselect all the descendants node */
   todoItemSelectionToggle(node: TodoItemFlatNode): void {
-    console.log("todoItem")
-    console.log(node)
     this.checklistSelection.toggle(node);
     const descendants = this.treeControl.getDescendants(node);
     this.checklistSelection.isSelected(node)
@@ -187,8 +201,6 @@ export class AppComponent {
 
   /** Toggle a leaf to-do item selection. Check all the parents to see if they changed */
   todoLeafItemSelectionToggle(node: TodoItemFlatNode): void {
-    console.log("todoLeaf")
-    console.log(node)
     this.checklistSelection.toggle(node);
     this.checkAllParentsSelection(node);
   }
@@ -238,14 +250,13 @@ export class AppComponent {
 
   configurarJSON() {
     let instancias = JSON.parse(localStorage.getItem('datos'));
+    this.construirRestricciones(instancias);
 
     this.jsonCompleto[instancias[0][0]] = {};
 
     for ( let i = 1; i < instancias.length; i++ ) {
       this.construir(this.jsonCompleto, instancias[0][0], instancias);
     }
-
-    this.construirRestricciones(instancias);
   }
 
   construirRestricciones(instancias) {
