@@ -158,21 +158,23 @@ export class AppComponent {
     this.restricciones.forEach((restriccion) => {
       if ( restriccion['nodo'] === node.item ) {
         node.constraint = restriccion['atributo'];
-
-        // Último cambio, pero no funciona por el momento
-        if ( node.constraint === 'Mandatory' ) {
-          this.checklistSelection.isSelected(node);
-        }
       }
     });
   }
 
   /** Whether all the descendants of the node are selected. */
   descendantsAllSelected(node: TodoItemFlatNode): boolean {
-    console.log(node)
+    //console.log(node)
     const descendants = this.treeControl.getDescendants(node);
-    const descAllSelected = descendants.every(child =>
-      this.checklistSelection.isSelected(child)
+    const descAllSelected = descendants.every((child) => {
+      // Último cambio, pero no funciona por el momento
+      //console.log(child)
+      if ( child.constraint === 'Mandatory' ) {
+        //console.log(child)
+        this.checklistSelection.isSelected(child);
+      }
+      //this.checklistSelection.isSelected(child)
+    }
     );
     return descAllSelected;
   }
@@ -180,7 +182,14 @@ export class AppComponent {
   /** Whether part of the descendants are selected */
   descendantsPartiallySelected(node: TodoItemFlatNode): boolean {
     const descendants = this.treeControl.getDescendants(node);
-    const result = descendants.some(child => this.checklistSelection.isSelected(child));
+    const result = descendants.some(child => {
+      if ( child.constraint === 'Mandatory' ) {
+        //console.log(child)
+        this.checklistSelection.isSelected(child);
+      }
+      //this.checklistSelection.isSelected(child)
+    });
+    
     return result && !this.descendantsAllSelected(node);
   }
 
@@ -188,10 +197,18 @@ export class AppComponent {
   todoItemSelectionToggle(node: TodoItemFlatNode): void {
     this.checklistSelection.toggle(node);
     const descendants = this.treeControl.getDescendants(node);
-    this.checklistSelection.isSelected(node)
-      ? this.checklistSelection.select(...descendants)
-      : this.checklistSelection.deselect(...descendants);
-
+    const mandatories = [];
+    const result = descendants.some(child => {
+      console.log(child)
+      if ( child.constraint === 'Mandatory' ) {
+        console.log(child)
+        mandatories.push(child)
+      }
+      
+    });
+    
+    this.checklistSelection.select(...mandatories);
+    
     // Force update for the parent
     descendants.every(child =>
       this.checklistSelection.isSelected(child)
@@ -218,8 +235,12 @@ export class AppComponent {
   checkRootNodeSelection(node: TodoItemFlatNode): void {
     const nodeSelected = this.checklistSelection.isSelected(node);
     const descendants = this.treeControl.getDescendants(node);
-    const descAllSelected = descendants.every(child =>
-      this.checklistSelection.isSelected(child)
+    const descAllSelected = descendants.every(child => {
+        if ( child.constraint === 'Mandatory' ) {
+          //console.log(child)
+          this.checklistSelection.isSelected(child);
+        }
+      }
     );
     if (nodeSelected && !descAllSelected) {
       this.checklistSelection.deselect(node);

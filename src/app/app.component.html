@@ -42,10 +42,13 @@
 <div>
 	<mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
 	  <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
+	    <!--<mat-checkbox class="checklist-leaf-node"
+	                  [checked]="checklistSelection.isSelected(node)">{{node.item}}</mat-checkbox>-->
 	    <mat-checkbox class="checklist-leaf-node"
-	                  [checked]="checklistSelection.isSelected(node)"
-	                  (change)="todoLeafItemSelectionToggle(node)">{{node.item}}</mat-checkbox>
-	  </mat-tree-node>
+                      [disabled]="node.constraint === 'Mandatory'"
+                      [checked]="checklistSelection.isSelected(node)"
+                      (change)="todoLeafItemSelectionToggle(node)">{{node.item}}</mat-checkbox>
+      </mat-tree-node>
 
 	  <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>
 	    <button mat-icon-button matTreeNodeToggle
@@ -54,9 +57,10 @@
 	        {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
 	      </mat-icon>
 	    </button>
-	    <mat-checkbox [checked]="descendantsAllSelected(node)"
-	                  [indeterminate]="descendantsPartiallySelected(node)"
-	                  (change)="todoItemSelectionToggle(node)">{{node.item}}</mat-checkbox>
+	    <!--<mat-checkbox [checked]="descendantsAllSelected(node)">{{node.item}}</mat-checkbox>-->
+        <mat-checkbox [checked]="descendantsAllSelected(node)"
+                      [indeterminate]="descendantsPartiallySelected(node)"
+                      (change)="todoItemSelectionToggle(node)">{{node.item}}</mat-checkbox>
 	  </mat-tree-node>
 	</mat-tree>
 
