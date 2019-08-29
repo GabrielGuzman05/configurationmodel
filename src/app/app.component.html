@@ -47,7 +47,7 @@
             <mat-checkbox class="checklist-leaf-node"
                         [disabled]="deshabilitarMandatory(node)"
                         [checked]="checklistSelection.isSelected(node)"
-                        (change)="validacionInicial(1)">{{node.item}}
+                        (change)="seleccionarNodo(node)">{{node.item}}
             </mat-checkbox>
         </mat-tree-node>
 
@@ -57,8 +57,8 @@
             <mat-checkbox *ngIf="node.level !== 0"
                         [disabled]="deshabilitarMandatory(node)"
                         [checked]="checklistSelection.isSelected(node)"
-                        [indeterminate]="validacionInicial(1)"
-                        (change)="validacionInicial(1)">{{node.item}}</mat-checkbox>
+                        [indeterminate]="validacionInicial(0)"
+                        (change)="seleccionarNodo(node)">{{node.item}}</mat-checkbox>
             <span *ngIf="node.level === 0">{{node.item}}</span>
             <button mat-icon-button matTreeNodeToggle
                     [attr.aria-label]="'toggle ' + node.filename">
@@ -69,5 +69,10 @@
         </mat-tree-node>
 	</mat-tree>
 
+
+    <button class="btn btn-success" (click)="obtenerJSON()">Crear JSON</button>
+    <div>
+        {{jsonReglas | json}}
+    </div>
 </div>
 <router-outlet></router-outlet>

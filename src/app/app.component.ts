@@ -86,6 +86,7 @@ export class AppComponent {
   title = 'Propuesta de modelos de configuración';
   jsonCompleto = {};
   restricciones = [];
+  jsonReglas = [];
 
   @ViewChild('tree') tree;
   
@@ -287,7 +288,7 @@ export class AppComponent {
   }
 
   configurarJSON() {
-    let instancias = JSON.parse(localStorage.getItem('datos'));
+    const instancias = JSON.parse(localStorage.getItem('datos'));
     this.construirRestricciones(instancias);
 
     this.jsonCompleto[instancias[0][0]] = {};
@@ -299,7 +300,7 @@ export class AppComponent {
 
   construirRestricciones(instancias) {
     for ( let i = 0; i < instancias.length; i++ ) {
-      let instancia = {
+      const instancia = {
         nodo: instancias[i][0],
         atributo: instancias[i][2],
         nodoAtributo: instancias[i][3] 
@@ -309,7 +310,7 @@ export class AppComponent {
   }
 
   construir(arrayJson, padre, instancias) {
-    let indices = [];
+    const indices = [];
 
     for ( let i = 1; i < instancias.length; i++ ) {
       if ( instancias[i][3] && padre === instancias[i][3] ) {
@@ -335,30 +336,54 @@ export class AppComponent {
     // Notify the change.
     this.database.dataChange.next(data);
     this.tree.treeControl.expandAll();
-    this.validacionInicial(1);
+    this.validacionInicial(0);
   }
 
-  validacionInicial(level: number, dataNodes?: any, node?: any) {
-    let nodosBase = this.tree.treeControl.dataNodes;
+  seleccionarNodo(nodo) {
+    this.checklistSelection.toggle(nodo);
+    console.log(this.checklistSelection.isSelected(nodo));
     
+    this.validacionInicial(0);
+    this.obtenerJSON();
+  }
+
+  obtenerJSON() {
+    const nodos = this.tree.treeControl.dataNodes;
+    this.jsonReglas = [];
+    nodos.forEach(nodo => {
+      const objeto = {
+        'feature' : nodo.item,
+        'selected': this.checklistSelection.isSelected(nodo)
+      }
+      this.jsonReglas.push(objeto);
+    });
+
+    console.log(this.jsonReglas);
+  }
+
+  validacionInicial(level: number, dataNodes?: any, padre?: any) {
+    let nodosBase;
     if (dataNodes) {
       nodosBase = dataNodes;
+    } else {
+      nodosBase = this.tree.treeControl.dataNodes;
     }
-
-    for ( let i = 0; i < nodosBase.length; i++ ) {
-      if (nodosBase[0].level === 0 || (node && this.checklistSelection.isSelected(node))) {
-        if (nodosBase[i].constraint === 'Mandatory' && nodosBase[i].level === level) {
-          if ((node && this.checklistSelection.isSelected(node)) || nodosBase[level - 1].level === 0) {
-            //console.log(node.item)
-            this.checklistSelection.select(nodosBase[i]);
-          }
-          //this.validacionInicial( level + 1, this.treeControl.getDescendants(nodosBase[i]), nodosBase[i]);
+    
+    nodosBase.forEach(nodo => {
+      let padreFlag = false;
+      if (nodo.level < 2 || this.checklistSelection.isSelected(nodo) || padre) {
+        if (nodo.constraint === 'Mandatory' && nodo.level === level) {
+          this.checklistSelection.select(nodo);
+          padreFlag = true;
         }
-      //this.validacionInicial( level + 1, this.treeControl.getDescendants(nodosBase[i]), nodosBase[i]);
-      }
-      this.validacionInicial( level + 1, this.treeControl.getDescendants(nodosBase[i]), nodosBase[i]);
-      
-    }
-  }
+        
+        if (this.checklistSelection.isSelected(nodo)) {
+          padreFlag = true;
+        }
 
+        this.validacionInicial(level + 1, this.treeControl.getDescendants(nodo), padreFlag);
+      }
+    });
+    
+  }
 }
