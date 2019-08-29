@@ -1,6 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { FlatTreeControl } from '@angular/cdk/tree';
-import { Component, Injectable } from '@angular/core';
+import { Component, Injectable, ViewChild } from '@angular/core';
 import { MatTreeFlatDataSource, MatTreeFlattener } from '@angular/material/tree';
 import { BehaviorSubject } from 'rxjs';
 
@@ -87,6 +87,8 @@ export class AppComponent {
   jsonCompleto = {};
   restricciones = [];
 
+  @ViewChild('tree') tree;
+  
   /** Map from flat node to nested node. This helps us finding the nested node to be modified */
   flatNodeMap = new Map<TodoItemFlatNode, TodoItemNode>();
 
@@ -155,6 +157,7 @@ export class AppComponent {
   }
 
   aplicarRestricciones(node: TodoItemFlatNode) {
+  	//console.log(node)
     this.restricciones.forEach((restriccion) => {
       if ( restriccion['nodo'] === node.item ) {
         node.constraint = restriccion['atributo'];
@@ -162,16 +165,23 @@ export class AppComponent {
     });
   }
 
+  deshabilitarMandatory(node: TodoItemFlatNode) {
+    return node.constraint === 'Mandatory' ? true : false;
+  }
+
   /** Whether all the descendants of the node are selected. */
   descendantsAllSelected(node: TodoItemFlatNode): boolean {
     //console.log(node)
     const descendants = this.treeControl.getDescendants(node);
+    //console.log(descendants)
     const descAllSelected = descendants.every((child) => {
       // Último cambio, pero no funciona por el momento
       //console.log(child)
       if ( child.constraint === 'Mandatory' ) {
         //console.log(child)
         this.checklistSelection.isSelected(child);
+      } else {
+      	return false;
       }
       //this.checklistSelection.isSelected(child)
     }
@@ -186,6 +196,8 @@ export class AppComponent {
       if ( child.constraint === 'Mandatory' ) {
         //console.log(child)
         this.checklistSelection.isSelected(child);
+      } else {
+      	return false;
       }
       //this.checklistSelection.isSelected(child)
     });
@@ -199,10 +211,13 @@ export class AppComponent {
     const descendants = this.treeControl.getDescendants(node);
     const mandatories = [];
     const result = descendants.some(child => {
-      console.log(child)
+      //console.log(child)
       if ( child.constraint === 'Mandatory' ) {
-        console.log(child)
-        mandatories.push(child)
+        //console.log(child)
+        mandatories.push(child);
+        //return true;
+      } else {
+      	return false;
       }
       
     });
@@ -239,7 +254,9 @@ export class AppComponent {
         if ( child.constraint === 'Mandatory' ) {
           //console.log(child)
           this.checklistSelection.isSelected(child);
-        }
+        } else {
+	      	return false;
+	      }
       }
     );
     if (nodeSelected && !descAllSelected) {
@@ -306,7 +323,7 @@ export class AppComponent {
     }
 
     for ( let j = 0; j < indices.length; j++ ) {
-      this.construir(arrayJson[padre], instancias[indices[j]][0], instancias);  
+      this.construir(arrayJson[padre], instancias[indices[j]][0], instancias);
     }
     
     this.crearArbol();
@@ -317,5 +334,31 @@ export class AppComponent {
     
     // Notify the change.
     this.database.dataChange.next(data);
+    this.tree.treeControl.expandAll();
+    this.validacionInicial(1);
   }
+
+  validacionInicial(level: number, dataNodes?: any, node?: any) {
+    let nodosBase = this.tree.treeControl.dataNodes;
+    
+    if (dataNodes) {
+      nodosBase = dataNodes;
+    }
+
+    for ( let i = 0; i < nodosBase.length; i++ ) {
+      if (nodosBase[0].level === 0 || (node && this.checklistSelection.isSelected(node))) {
+        if (nodosBase[i].constraint === 'Mandatory' && nodosBase[i].level === level) {
+          if ((node && this.checklistSelection.isSelected(node)) || nodosBase[level - 1].level === 0) {
+            //console.log(node.item)
+            this.checklistSelection.select(nodosBase[i]);
+          }
+          //this.validacionInicial( level + 1, this.treeControl.getDescendants(nodosBase[i]), nodosBase[i]);
+        }
+      //this.validacionInicial( level + 1, this.treeControl.getDescendants(nodosBase[i]), nodosBase[i]);
+      }
+      this.validacionInicial( level + 1, this.treeControl.getDescendants(nodosBase[i]), nodosBase[i]);
+      
+    }
+  }
+
 }
