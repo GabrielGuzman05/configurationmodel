@@ -361,6 +361,10 @@ export class AppComponent {
     console.log(this.jsonReglas);
   }
 
+  validarChecks() {
+    
+  }
+
   validacionInicial(level: number, dataNodes?: any, padre?: any) {
     let nodosBase;
     if (dataNodes) {
@@ -372,18 +376,42 @@ export class AppComponent {
     nodosBase.forEach(nodo => {
       let padreFlag = false;
       if (nodo.level < 2 || this.checklistSelection.isSelected(nodo) || padre) {
-        if (nodo.constraint === 'Mandatory' && nodo.level === level) {
-          this.checklistSelection.select(nodo);
-          padreFlag = true;
+        const father = this.getParent(nodo);
+
+        if (this.checklistSelection.isSelected(father) || nodo.level === 1) {
+          if (nodo.constraint === 'Mandatory' && nodo.level === level) {
+            this.checklistSelection.select(nodo);
+            padreFlag = true;
+          }
+          
+          if (this.checklistSelection.isSelected(nodo)) {
+            padreFlag = true;
+          }
+        } else {
+          this.checklistSelection.deselect(nodo);
         }
         
-        if (this.checklistSelection.isSelected(nodo)) {
-          padreFlag = true;
-        }
 
         this.validacionInicial(level + 1, this.treeControl.getDescendants(nodo), padreFlag);
       }
     });
-    
+  }
+
+  getParent(node) {
+    const currentLevel = this.getLevel(node);
+
+    if (currentLevel < 1) {
+      return null;
+    }
+
+    const startIndex = this.tree.treeControl.dataNodes.indexOf(node) - 1;
+
+    for (let i = startIndex; i >= 0; i--) {
+      const currentNode = this.tree.treeControl.dataNodes[i];
+
+      if (this.getLevel(currentNode) < currentLevel) {
+        return currentNode;
+      }
+    }
   }
 }
