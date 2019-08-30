@@ -167,107 +167,34 @@ export class AppComponent {
   }
 
   deshabilitarMandatory(node: TodoItemFlatNode) {
-    return node.constraint === 'Mandatory' ? true : false;
-  }
-
-  /** Whether all the descendants of the node are selected. */
-  descendantsAllSelected(node: TodoItemFlatNode): boolean {
-    //console.log(node)
-    const descendants = this.treeControl.getDescendants(node);
-    //console.log(descendants)
-    const descAllSelected = descendants.every((child) => {
-      // Último cambio, pero no funciona por el momento
-      //console.log(child)
-      if ( child.constraint === 'Mandatory' ) {
-        //console.log(child)
-        this.checklistSelection.isSelected(child);
+    if (node.level === 1) {
+      return node.constraint === 'Mandatory' ? true : false;
+    } else {
+      const padre = this.getParentNode(node);
+      if (this.checklistSelection.isSelected(padre) && node.constraint === 'Mandatory') {
+        return true;
       } else {
-      	return false;
+        return false;
       }
-      //this.checklistSelection.isSelected(child)
     }
-    );
-    return descAllSelected;
   }
 
-  /** Whether part of the descendants are selected */
-  descendantsPartiallySelected(node: TodoItemFlatNode): boolean {
-    const descendants = this.treeControl.getDescendants(node);
-    const result = descendants.some(child => {
-      if ( child.constraint === 'Mandatory' ) {
-        //console.log(child)
-        this.checklistSelection.isSelected(child);
-      } else {
-      	return false;
-      }
-      //this.checklistSelection.isSelected(child)
-    });
-    
-    return result && !this.descendantsAllSelected(node);
-  }
-
-  /** Toggle the to-do item selection. Select/deselect all the descendants node */
-  todoItemSelectionToggle(node: TodoItemFlatNode): void {
-    this.checklistSelection.toggle(node);
-    const descendants = this.treeControl.getDescendants(node);
-    const mandatories = [];
-    const result = descendants.some(child => {
-      //console.log(child)
-      if ( child.constraint === 'Mandatory' ) {
-        //console.log(child)
-        mandatories.push(child);
-        //return true;
-      } else {
-      	return false;
-      }
-      
-    });
-    
-    this.checklistSelection.select(...mandatories);
-    
-    // Force update for the parent
-    descendants.every(child =>
-      this.checklistSelection.isSelected(child)
-    );
-    this.checkAllParentsSelection(node);
-  }
-
-  /** Toggle a leaf to-do item selection. Check all the parents to see if they changed */
-  todoLeafItemSelectionToggle(node: TodoItemFlatNode): void {
-    this.checklistSelection.toggle(node);
-    this.checkAllParentsSelection(node);
-  }
-
-  /* Checks all the parents when a leaf node is selected/unselected */
+  /**
+   * Al seleccionar un hijo, los padres deben seleccionarse
+   * de manera automática
+   */
   checkAllParentsSelection(node: TodoItemFlatNode): void {
     let parent: TodoItemFlatNode | null = this.getParentNode(node);
+
     while (parent) {
-      this.checkRootNodeSelection(parent);
+      this.checklistSelection.select(parent);
       parent = this.getParentNode(parent);
     }
   }
 
-  /** Check root node checked state and change it accordingly */
-  checkRootNodeSelection(node: TodoItemFlatNode): void {
-    const nodeSelected = this.checklistSelection.isSelected(node);
-    const descendants = this.treeControl.getDescendants(node);
-    const descAllSelected = descendants.every(child => {
-        if ( child.constraint === 'Mandatory' ) {
-          //console.log(child)
-          this.checklistSelection.isSelected(child);
-        } else {
-	      	return false;
-	      }
-      }
-    );
-    if (nodeSelected && !descAllSelected) {
-      this.checklistSelection.deselect(node);
-    } else if (!nodeSelected && descAllSelected) {
-      this.checklistSelection.select(node);
-    }
-  }
-
-  /* Get the parent node of a node */
+  /**
+   * Obtiene el padre directo de un nodo
+   */
   getParentNode(node: TodoItemFlatNode): TodoItemFlatNode | null {
     const currentLevel = this.getLevel(node);
 
@@ -339,14 +266,25 @@ export class AppComponent {
     this.validacionInicial(0);
   }
 
-  seleccionarNodo(nodo) {
+  /**
+   * Cambia el estado de un nodo
+   * Si es false pasa a true y al revés
+   * Valida los nodos y actualiza
+   * 
+   * @param {TodoItemFlatNode} nodo 
+   */
+  seleccionarNodo(nodo: TodoItemFlatNode) {
     this.checklistSelection.toggle(nodo);
-    console.log(this.checklistSelection.isSelected(nodo));
     
+    //this.validarChecks(nodo);
+    this.checkAllParentsSelection(nodo);
     this.validacionInicial(0);
     this.obtenerJSON();
   }
 
+  /**
+   * Obtiene un JSON inicial a partir de los nodos
+   */
   obtenerJSON() {
     const nodos = this.tree.treeControl.dataNodes;
     this.jsonReglas = [];
@@ -361,10 +299,21 @@ export class AppComponent {
     console.log(this.jsonReglas);
   }
 
-  validarChecks() {
-    
+  validarChecks(node: TodoItemFlatNode) {
+    //const padre = this.getParentNode()
+
+
+    this.validacionInicial(0);
   }
 
+  /**
+   * Realiza una validación completa del árbol
+   * en busca de los Mandatory
+   * También valida la deselección de los nodos
+   * @param {number} level 
+   * @param dataNodes 
+   * @param padre 
+   */
   validacionInicial(level: number, dataNodes?: any, padre?: any) {
     let nodosBase;
     if (dataNodes) {
@@ -376,7 +325,7 @@ export class AppComponent {
     nodosBase.forEach(nodo => {
       let padreFlag = false;
       if (nodo.level < 2 || this.checklistSelection.isSelected(nodo) || padre) {
-        const father = this.getParent(nodo);
+        const father = this.getParentNode(nodo);
 
         if (this.checklistSelection.isSelected(father) || nodo.level === 1) {
           if (nodo.constraint === 'Mandatory' && nodo.level === level) {
@@ -395,23 +344,5 @@ export class AppComponent {
         this.validacionInicial(level + 1, this.treeControl.getDescendants(nodo), padreFlag);
       }
     });
-  }
-
-  getParent(node) {
-    const currentLevel = this.getLevel(node);
-
-    if (currentLevel < 1) {
-      return null;
-    }
-
-    const startIndex = this.tree.treeControl.dataNodes.indexOf(node) - 1;
-
-    for (let i = startIndex; i >= 0; i--) {
-      const currentNode = this.tree.treeControl.dataNodes[i];
-
-      if (this.getLevel(currentNode) < currentLevel) {
-        return currentNode;
-      }
-    }
   }
 }
