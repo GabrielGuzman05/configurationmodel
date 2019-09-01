@@ -45,7 +45,7 @@
             <!--<mat-checkbox class="checklist-leaf-node"
                         [checked]="checklistSelection.isSelected(node)">{{node.item}}</mat-checkbox>-->
             <mat-checkbox class="checklist-leaf-node"
-                        [disabled]="deshabilitarMandatory(node)"
+                        [disabled]="deshabilitarMandatory(node) || deshabilitarXOR(node)"
                         [checked]="checklistSelection.isSelected(node)"
                         (change)="seleccionarNodo(node)">{{node.item}}
             </mat-checkbox>
@@ -55,7 +55,7 @@
 	    
             <!--<mat-checkbox [checked]="descendantsAllSelected(node)">{{node.item}}</mat-checkbox>-->
             <mat-checkbox *ngIf="node.level !== 0"
-                        [disabled]="deshabilitarMandatory(node)"
+                        [disabled]="deshabilitarMandatory(node) || deshabilitarXOR(node) || deshabilitarNodo(node)"
                         [checked]="checklistSelection.isSelected(node)"
                         [indeterminate]="validacionInicial(0)"
                         (change)="seleccionarNodo(node)">{{node.item}}</mat-checkbox>

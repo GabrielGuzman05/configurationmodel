@@ -19,6 +19,7 @@ export class TodoItemFlatNode {
   level: number;
   expandable: boolean;
   constraint: string;
+  disabled: boolean;
 }
 
 /**
@@ -128,6 +129,8 @@ export class AppComponent {
 
   getConstraint = (node: TodoItemFlatNode) => node.constraint;
 
+  getDisabled = (node: TodoItemFlatNode) => node.disabled;
+
   isExpandable = (node: TodoItemFlatNode) => node.expandable;
 
   getChildren = (node: TodoItemNode): TodoItemNode[] => node.children;
@@ -148,6 +151,7 @@ export class AppComponent {
     flatNode.item = node.item;
     flatNode.level = level;
     flatNode.constraint = null;
+    flatNode.disabled = false;
     flatNode.expandable = !!node.children;
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
@@ -158,25 +162,11 @@ export class AppComponent {
   }
 
   aplicarRestricciones(node: TodoItemFlatNode) {
-  	//console.log(node)
     this.restricciones.forEach((restriccion) => {
       if ( restriccion['nodo'] === node.item ) {
         node.constraint = restriccion['atributo'];
       }
     });
-  }
-
-  deshabilitarMandatory(node: TodoItemFlatNode) {
-    if (node.level === 1) {
-      return node.constraint === 'Mandatory' ? true : false;
-    } else {
-      const padre = this.getParentNode(node);
-      if (this.checklistSelection.isSelected(padre) && node.constraint === 'Mandatory') {
-        return true;
-      } else {
-        return false;
-      }
-    }
   }
 
   /**
@@ -282,6 +272,38 @@ export class AppComponent {
     this.obtenerJSON();
   }
 
+  deshabilitarXOR(nodo: TodoItemFlatNode) {
+    if (nodo.constraint === 'XOR' && !this.checklistSelection.isSelected(nodo)) {
+      const padre = this.getParentNode(nodo);
+      const hijos = this.treeControl.getDescendants(padre);
+      nodo.disabled = false;
+      
+      for (let i = 0; i < hijos.length; i++) {
+        if (hijos[i].level === (nodo.level) && hijos[i] !== nodo
+            && this.checklistSelection.isSelected(hijos[i])) {
+          nodo.disabled = true;
+        }
+      }
+
+      return nodo.disabled;
+    } else {
+      return nodo.disabled = false;
+    }
+  }
+
+  deshabilitarMandatory(node: TodoItemFlatNode) {
+    if (node.level === 1) {
+      return node.constraint === 'Mandatory' ? node.disabled = true : node.disabled = false;
+    } else {
+      const padre = this.getParentNode(node);
+      if (this.checklistSelection.isSelected(padre) && node.constraint === 'Mandatory') {
+        return node.disabled = true;
+      } else {
+        return node.disabled = false;
+      }
+    }
+  }
+
   /**
    * Obtiene un JSON inicial a partir de los nodos
    */
@@ -297,13 +319,6 @@ export class AppComponent {
     });
 
     console.log(this.jsonReglas);
-  }
-
-  validarChecks(node: TodoItemFlatNode) {
-    //const padre = this.getParentNode()
-
-
-    this.validacionInicial(0);
   }
 
   /**
@@ -324,6 +339,8 @@ export class AppComponent {
     
     nodosBase.forEach(nodo => {
       let padreFlag = false;
+      this.deshabilitarMandatory(nodo);
+      
       if (nodo.level < 2 || this.checklistSelection.isSelected(nodo) || padre) {
         const father = this.getParentNode(nodo);
 
@@ -340,7 +357,6 @@ export class AppComponent {
           this.checklistSelection.deselect(nodo);
         }
         
-
         this.validacionInicial(level + 1, this.treeControl.getDescendants(nodo), padreFlag);
       }
     });
