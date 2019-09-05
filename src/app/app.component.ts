@@ -281,13 +281,15 @@ export class AppComponent {
       for (let i = 0; i < hijos.length; i++) {
         if (hijos[i].level === (nodo.level) && hijos[i] !== nodo
             && this.checklistSelection.isSelected(hijos[i])) {
+          console.log("entre aquí")
+          hijos[i].disabled = true;
           nodo.disabled = true;
         }
       }
 
       return nodo.disabled;
     } else {
-      return nodo.disabled = false;
+      //return nodo.disabled = false;
     }
   }
 
@@ -299,8 +301,23 @@ export class AppComponent {
       if (this.checklistSelection.isSelected(padre) && node.constraint === 'Mandatory') {
         return node.disabled = true;
       } else {
-        return node.disabled = false;
+        //return node.disabled = false;
       }
+    }
+  }
+
+  deshabilitarNodo(node: TodoItemFlatNode) {
+    const padre = this.getParentNode(node);
+    
+    if (padre.item === "High Res") {
+      console.log(padre)
+    }
+    if (padre.disabled && !this.checklistSelection.isSelected(padre)) {
+      console.log(node)
+      return node.disabled = true;
+    } else {
+      
+      return node.disabled = false;
     }
   }
 
@@ -317,8 +334,6 @@ export class AppComponent {
       }
       this.jsonReglas.push(objeto);
     });
-
-    console.log(this.jsonReglas);
   }
 
   /**
