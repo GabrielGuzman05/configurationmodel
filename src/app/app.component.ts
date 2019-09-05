@@ -221,7 +221,7 @@ export class AppComponent {
         nodo: instancias[i][0],
         atributo: instancias[i][2],
         nodoAtributo: instancias[i][3] 
-      }
+      };
       this.restricciones.push(instancia);
     }
   }
@@ -265,34 +265,36 @@ export class AppComponent {
    */
   seleccionarNodo(nodo: TodoItemFlatNode) {
     this.checklistSelection.toggle(nodo);
-    
-    //this.validarChecks(nodo);
     this.checkAllParentsSelection(nodo);
-    this.validacionInicial(0);
     this.obtenerJSON();
   }
 
+  /**
+   * Si el nodo es de tipo XOR y hay un hermano seleccionado, este se deshabilita
+   * @param {TodoItemFlatNode} nodo 
+   */
   deshabilitarXOR(nodo: TodoItemFlatNode) {
     if (nodo.constraint === 'XOR' && !this.checklistSelection.isSelected(nodo)) {
       const padre = this.getParentNode(nodo);
       const hijos = this.treeControl.getDescendants(padre);
       nodo.disabled = false;
-      
+
       for (let i = 0; i < hijos.length; i++) {
         if (hijos[i].level === (nodo.level) && hijos[i] !== nodo
             && this.checklistSelection.isSelected(hijos[i])) {
-          console.log("entre aquí")
-          hijos[i].disabled = true;
           nodo.disabled = true;
         }
       }
 
       return nodo.disabled;
-    } else {
-      //return nodo.disabled = false;
     }
   }
 
+  /**
+   * Si es Mandatory en el nivel 1, se deshabilita
+   * Si el nodo es Mandatory y su padre está seleccionado, este se deshabilita
+   * @param {TodoItemFlatNode} node 
+   */
   deshabilitarMandatory(node: TodoItemFlatNode) {
     if (node.level === 1) {
       return node.constraint === 'Mandatory' ? node.disabled = true : node.disabled = false;
@@ -300,25 +302,19 @@ export class AppComponent {
       const padre = this.getParentNode(node);
       if (this.checklistSelection.isSelected(padre) && node.constraint === 'Mandatory') {
         return node.disabled = true;
-      } else {
-        //return node.disabled = false;
       }
     }
   }
 
+  /**
+   * Si el padre de un nodo tiene el atributo disabled en true
+   * y no está seleccionado, entonces el nodo hijo se deshabilita
+   * @param {TodoItemFlatNode} node 
+   */
   deshabilitarNodo(node: TodoItemFlatNode) {
     const padre = this.getParentNode(node);
-    
-    if (padre.item === "High Res") {
-      console.log(padre)
-    }
-    if (padre.disabled && !this.checklistSelection.isSelected(padre)) {
-      console.log(node)
-      return node.disabled = true;
-    } else {
-      
-      return node.disabled = false;
-    }
+    return (padre.disabled && !this.checklistSelection.isSelected(padre))
+          ? node.disabled = true : node.disabled = false;
   }
 
   /**
