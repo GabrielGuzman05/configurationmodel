@@ -155,7 +155,7 @@ export class AppComponent {
     flatNode.expandable = !!node.children;
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
-     
+   
     this.aplicarRestricciones(flatNode);
 
     return flatNode;
@@ -217,10 +217,11 @@ export class AppComponent {
 
   construirRestricciones(instancias) {
     for ( let i = 0; i < instancias.length; i++ ) {
+      console.log(instancias[i])
       const instancia = {
         nodo: instancias[i][0],
         atributo: instancias[i][2],
-        nodoAtributo: instancias[i][3] 
+        nodoAtributo: instancias[i][3]
       };
       this.restricciones.push(instancia);
     }
