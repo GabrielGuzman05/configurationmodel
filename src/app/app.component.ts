@@ -19,6 +19,8 @@ export class TodoItemFlatNode {
   level: number;
   expandable: boolean;
   constraint: string;
+  require: any[];
+  exclude: any[];
   disabled: boolean;
 }
 
@@ -87,6 +89,8 @@ export class AppComponent {
   title = 'Propuesta de modelos de configuración';
   jsonCompleto = {};
   restricciones = [];
+  require = [];
+  exclude = [];
   jsonReglas = [];
 
   @ViewChild('tree') tree;
@@ -129,6 +133,10 @@ export class AppComponent {
 
   getConstraint = (node: TodoItemFlatNode) => node.constraint;
 
+  getRequire = (node: TodoItemFlatNode) => node.require;
+
+  getExclude = (node: TodoItemFlatNode) => node.exclude;
+
   getDisabled = (node: TodoItemFlatNode) => node.disabled;
 
   isExpandable = (node: TodoItemFlatNode) => node.expandable;
@@ -151,6 +159,8 @@ export class AppComponent {
     flatNode.item = node.item;
     flatNode.level = level;
     flatNode.constraint = null;
+    flatNode.require = [];
+    flatNode.exclude = [];
     flatNode.disabled = false;
     flatNode.expandable = !!node.children;
     this.flatNodeMap.set(flatNode, node);
@@ -161,12 +171,24 @@ export class AppComponent {
     return flatNode;
   }
 
+  /**
+   * Se aplican las restricciones correspondientes a cada nodo
+   * @param node 
+   */
   aplicarRestricciones(node: TodoItemFlatNode) {
     this.restricciones.forEach((restriccion) => {
       if ( restriccion['nodo'] === node.item ) {
         node.constraint = restriccion['atributo'];
       }
     });
+  }
+
+  aplicarRequires(node: TodoItemFlatNode) {
+    this.require.forEach((require) => {
+      if ( require['nodo'] === node.item) {
+        
+      }
+    })
   }
 
   /**
@@ -204,6 +226,10 @@ export class AppComponent {
     return null;
   }
 
+  /**
+   * Se envia a configurar el JSON, instancia la construiccion de nodos
+   * y de restricciones
+   */
   configurarJSON() {
     const instancias = JSON.parse(localStorage.getItem('datos'));
     this.construirRestricciones(instancias);
@@ -215,18 +241,53 @@ export class AppComponent {
     }
   }
 
+  /**
+   * Se construyen las restricciones basica (Optional, Mandatory, etc)
+   * Se instancia la construccion de los require y exclude
+   * @param instancias 
+   */
   construirRestricciones(instancias) {
     for ( let i = 0; i < instancias.length; i++ ) {
-      console.log(instancias[i])
       const instancia = {
         nodo: instancias[i][0],
         atributo: instancias[i][2],
         nodoAtributo: instancias[i][3]
       };
       this.restricciones.push(instancia);
+
+      if (instancias[i][5].length !== 0) {
+        this.construirRequireOrExclude(instancias[i][5]);
+      }
     }
   }
 
+  /**
+   * Se inicializan y llenan los arreglos require y exclude
+   * @param instancias 
+   */
+  construirRequireOrExclude(instancias) {
+    instancias.forEach(instancia => {
+      const json = {
+        nodo: instancia[0],
+        atributo: instancia[1],
+        nodoAtributo: instancia[2]
+      };
+      
+      if (json['nodo'] === 'Requires') {
+        this.require.push(json);
+      } else if (json['nodo'] === 'Excludes') {
+        this.exclude.push(json);
+      }
+    });
+  }
+
+  /**
+   * Funcion recursiva que permite armar los nodos que tendra el arbol
+   * esto lo hace en el formato que necesita Angular Tree
+   * @param arrayJson 
+   * @param padre 
+   * @param instancias 
+   */
   construir(arrayJson, padre, instancias) {
     const indices = [];
 
@@ -248,6 +309,11 @@ export class AppComponent {
     this.crearArbol();
   }
 
+  /**
+   * Crea el arbol a partir del json
+   * Expande el arbol por defecto
+   * Inicia la primera valiacion de mandatory
+   */
   crearArbol(){
     const data = this.database.buildFileTree(this.jsonCompleto, 0);
     
