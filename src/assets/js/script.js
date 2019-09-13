@@ -31,7 +31,7 @@ function svgSize(obj) {
 function configurarInstancias(instancias) {
     instances = new Array(instancias.length);
     for (var i = 0; i < instancias.length; i++) {
-        instances[i] = new Array(5);
+        instances[i] = new Array(6);
         instances[i][0] = instancias[i]._name;
         
         var posicion = instancias[i].ATTRIBUTE[0].__text;
@@ -39,6 +39,10 @@ function configurarInstancias(instancias) {
         posicion = posicion.split("E ");
         posicion = posicion[1].split("index");
         instances[i][1] = posicion[0];
+        
+        //Relaciones require y exclude
+        instances[i][5] = [];
+
         svg.appendChild(instancesvg(instances[i][1], instances[i][0]));
     }
 }
@@ -107,8 +111,24 @@ function agregarConectores(conectores) {
         for (var j = 0; j < instances.length; j++) {
             var comparet = instances[j][0].localeCompare(conectores[i].TO._instance);
             if (comparet === 0) {
+                var original = false;
+                var clase;
+                var instancia;
+                var medidas;
+
+                //En caso de existir y no ser Requires o Excludes, se conservan los datos originales
+                //para volver a reasignar luego
+                if (instances[j][2] !== null && instances[j][3] && instances[j][4] !== null &&
+                    instances[j][2] !== 'Requires' && instances[j][2] !== 'Excludes') {
+                    original = true;
+                    clase = instances[j][2];
+                    instancia = instances[j][3];
+                    medidas = instances[j][4];
+                }
+
                 instances[j][2] = conectores[i]._class;
                 instances[j][3] = conectores[i].FROM._instance;
+
                 for (var k = 0; k < instances.length; k++) {
                     var comparef = instances[k][0].localeCompare(instances[j][3]);
                     if (comparef === 0) {
@@ -134,15 +154,24 @@ function agregarConectores(conectores) {
                         }
 
                         if (require === 0) {
+                            instances[j][5].push([instances[j][2], instances[j][3], instances[j][4]]);
                             dibujarRequire(conectores, instances[j], i);
                         }
 
                         if (exclude === 0) {
+                            instances[j][5].push([instances[j][2], instances[j][3], instances[j][4]]);
                             dibujarExclude(conectores, instances[j], i);
                         }
                     }
                 }
 
+                //En caso de existir, volver al los atributos que no son require ni exclude
+                if (original) {
+                    instances[j][2] = clase;
+                    instances[j][3] = instancia;
+                    instances[j][4] = medidas;
+                }
+                
                 info += instances[j][0] + " p: " + instances[j][1] + " t: " + instances[j][2] + " f: " + instances[j][3] + "p2: " + instances[j][4] + " /// ";
             }
         }
