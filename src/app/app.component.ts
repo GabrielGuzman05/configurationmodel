@@ -90,7 +90,9 @@ export class AppComponent {
   jsonCompleto = {};
   restricciones = [];
   require = [];
+  nodosRequire = [];
   exclude = [];
+  nodosExclude = [];
   jsonReglas = [];
 
   @ViewChild('tree') tree;
@@ -165,8 +167,9 @@ export class AppComponent {
     flatNode.expandable = !!node.children;
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
-   
+
     this.aplicarRestricciones(flatNode);
+    this.obtenerNodosExclude(flatNode);
 
     return flatNode;
   }
@@ -183,12 +186,38 @@ export class AppComponent {
     });
   }
 
-  aplicarRequires(node: TodoItemFlatNode) {
-    this.require.forEach((require) => {
-      if ( require['nodo'] === node.item) {
-        
+  /**
+   * A partir de los exclude que se tienen registro
+   * se obtienen los nodos
+   * @param node 
+   */
+  obtenerNodosExclude(node: TodoItemFlatNode) {
+    this.exclude.forEach((exclude) => {
+      if ( exclude['origen'] === node.item ) {
+        exclude['nodoOrigen'] = node;
       }
-    })
+
+      if ( exclude['destino'] === node.item ) {
+        exclude['nodoDestino'] = node;
+      }
+
+      this.asignarNodosExclude(node, exclude);
+    });
+  }
+
+  /**
+   * Se aplican las restricciones a los nodos correspondientes
+   * @param node 
+   * @param exclude 
+   */
+  asignarNodosExclude(node: TodoItemFlatNode, exclude) {
+    if ( exclude['nodoOrigen'] && exclude['destino'] === node.item ) {
+      node.exclude.push(exclude['nodoOrigen']);
+    }
+    
+    if ( exclude['nodoDestino'] && exclude['origen'] === node.item ) {
+      node.exclude.push(exclude['nodoDestino']);
+    }
   }
 
   /**
@@ -256,7 +285,7 @@ export class AppComponent {
       this.restricciones.push(instancia);
 
       if (instancias[i][5].length !== 0) {
-        this.construirRequireOrExclude(instancias[i][5]);
+        this.construirRequireOrExclude(instancias[i][5], instancias[i][0]);
       }
     }
   }
@@ -265,11 +294,13 @@ export class AppComponent {
    * Se inicializan y llenan los arreglos require y exclude
    * @param instancias 
    */
-  construirRequireOrExclude(instancias) {
+  construirRequireOrExclude(instancias, origen) {
     instancias.forEach(instancia => {
+      console.log(instancia)
       const json = {
+        origen: origen,
         nodo: instancia[0],
-        atributo: instancia[1],
+        destino: instancia[1],
         nodoAtributo: instancia[2]
       };
       
@@ -295,7 +326,7 @@ export class AppComponent {
       if ( instancias[i][3] && padre === instancias[i][3] ) {
         arrayJson[padre][instancias[i][0]] = {};
         indices.push(i);
-      }  
+      }
     }
 
     if ( indices.length === 0 ) {
@@ -305,7 +336,7 @@ export class AppComponent {
     for ( let j = 0; j < indices.length; j++ ) {
       this.construir(arrayJson[padre], instancias[indices[j]][0], instancias);
     }
-    
+
     this.crearArbol();
   }
 
@@ -314,9 +345,9 @@ export class AppComponent {
    * Expande el arbol por defecto
    * Inicia la primera valiacion de mandatory
    */
-  crearArbol(){
+  crearArbol() {
     const data = this.database.buildFileTree(this.jsonCompleto, 0);
-    
+
     // Notify the change.
     this.database.dataChange.next(data);
     this.tree.treeControl.expandAll();
@@ -333,6 +364,11 @@ export class AppComponent {
   seleccionarNodo(nodo: TodoItemFlatNode) {
     this.checklistSelection.toggle(nodo);
     this.checkAllParentsSelection(nodo);
+
+    if (nodo.exclude.length > 0) {
+      this.deshabilitarNodoExclude(nodo);
+    }
+
     this.obtenerJSON();
   }
 
@@ -384,6 +420,12 @@ export class AppComponent {
           ? node.disabled = true : node.disabled = false;
   }
 
+  deshabilitarNodoExclude(node: TodoItemFlatNode) {
+    node.exclude.forEach(nodo => {
+      nodo.disabled = !nodo.disabled;
+    });
+  }
+
   /**
    * Obtiene un JSON inicial a partir de los nodos
    */
@@ -414,11 +456,11 @@ export class AppComponent {
     } else {
       nodosBase = this.tree.treeControl.dataNodes;
     }
-    
+
     nodosBase.forEach(nodo => {
       let padreFlag = false;
       this.deshabilitarMandatory(nodo);
-      
+
       if (nodo.level < 2 || this.checklistSelection.isSelected(nodo) || padre) {
         const father = this.getParentNode(nodo);
 
@@ -427,14 +469,14 @@ export class AppComponent {
             this.checklistSelection.select(nodo);
             padreFlag = true;
           }
-          
+
           if (this.checklistSelection.isSelected(nodo)) {
             padreFlag = true;
           }
         } else {
           this.checklistSelection.deselect(nodo);
         }
-        
+
         this.validacionInicial(level + 1, this.treeControl.getDescendants(nodo), padreFlag);
       }
     });
