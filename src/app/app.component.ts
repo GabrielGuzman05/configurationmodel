@@ -364,11 +364,6 @@ export class AppComponent {
   seleccionarNodo(nodo: TodoItemFlatNode) {
     this.checklistSelection.toggle(nodo);
     this.checkAllParentsSelection(nodo);
-
-    if (nodo.exclude.length > 0) {
-      this.deshabilitarNodoExclude(nodo);
-    }
-
     this.obtenerJSON();
   }
 
@@ -420,10 +415,23 @@ export class AppComponent {
           ? node.disabled = true : node.disabled = false;
   }
 
+  /**
+   * Si el nodo tiene un arreglo de exclude, se verifican que esos nodos esten
+   * o no seleccionados. Si estan seleccionados se bloquea el nodo que verificamos
+   * y si no, no se bloquea
+   * @param node 
+   */
   deshabilitarNodoExclude(node: TodoItemFlatNode) {
+    let deshabilitar = false;
     node.exclude.forEach(nodo => {
-      nodo.disabled = !nodo.disabled;
+      console.log(node)
+      if (this.checklistSelection.isSelected(nodo) && !this.checklistSelection.isSelected(node)) {
+        console.log("entré")
+        deshabilitar = true;
+      }
     });
+
+    return node.disabled = deshabilitar;
   }
 
   /**
