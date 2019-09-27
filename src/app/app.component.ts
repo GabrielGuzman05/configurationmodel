@@ -90,9 +90,7 @@ export class AppComponent {
   jsonCompleto = {};
   restricciones = [];
   require = [];
-  nodosRequire = [];
   exclude = [];
-  nodosExclude = [];
   jsonReglas = [];
 
   @ViewChild('tree') tree;
@@ -362,7 +360,18 @@ export class AppComponent {
    * @param {TodoItemFlatNode} nodo 
    */
   seleccionarNodo(nodo: TodoItemFlatNode) {
+    if (nodo.item === 'GPS') {
+      console.log(nodo.item);
+      console.log(nodo);
+      console.log(this.checklistSelection.isSelected(nodo));
+    }
+    
     this.checklistSelection.toggle(nodo);
+    if (nodo.item === 'GPS') {
+      //console.log(nodo.item);
+      //console.log(nodo);
+      console.log(this.checklistSelection.isSelected(nodo));
+    }
     this.checkAllParentsSelection(nodo);
     this.obtenerJSON();
   }
@@ -423,10 +432,9 @@ export class AppComponent {
    */
   deshabilitarNodoExclude(node: TodoItemFlatNode) {
     let deshabilitar = false;
+    
     node.exclude.forEach(nodo => {
-      console.log(node)
       if (this.checklistSelection.isSelected(nodo) && !this.checklistSelection.isSelected(node)) {
-        console.log("entré")
         deshabilitar = true;
       }
     });
