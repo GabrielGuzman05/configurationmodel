@@ -168,6 +168,7 @@ export class AppComponent {
 
     this.aplicarRestricciones(flatNode);
     this.obtenerNodosExclude(flatNode);
+    this.obtenerNodosRequire(flatNode);
 
     return flatNode;
   }
@@ -212,9 +213,35 @@ export class AppComponent {
     if ( exclude['nodoOrigen'] && exclude['destino'] === node.item ) {
       node.exclude.push(exclude['nodoOrigen']);
     }
-    
+
     if ( exclude['nodoDestino'] && exclude['origen'] === node.item ) {
       node.exclude.push(exclude['nodoDestino']);
+    }
+  }
+
+  /**
+   * A partir de los require que se tienen registro
+   * se obtienen los nodos
+   * @param node
+   */
+  obtenerNodosRequire(node: TodoItemFlatNode) {
+    this.require.forEach((require) => {
+      if ( require['origen'] === node.item ) {
+        require['nodoOrigen'] = node;
+      }
+
+      this.asignarNodosRequire(node, require);
+    });
+  }
+
+  /**
+   * Se aplican las restricciones a los nodos correspondientes
+   * @param node 
+   * @param require
+   */
+  asignarNodosRequire(node: TodoItemFlatNode, require) {
+    if ( require['nodoOrigen'] && require['destino'] === node.item ) {
+      node.require.push(require['nodoOrigen']);
     }
   }
 
@@ -301,7 +328,7 @@ export class AppComponent {
         destino: instancia[1],
         nodoAtributo: instancia[2]
       };
-      
+
       if (json['nodo'] === 'Requires') {
         this.require.push(json);
       } else if (json['nodo'] === 'Excludes') {
@@ -360,18 +387,21 @@ export class AppComponent {
    * @param {TodoItemFlatNode} nodo 
    */
   seleccionarNodo(nodo: TodoItemFlatNode) {
+    console.log(nodo)
+    /*
     if (nodo.item === 'GPS') {
       console.log(nodo.item);
       console.log(nodo);
       console.log(this.checklistSelection.isSelected(nodo));
-    }
-    
+    }*/
+
     this.checklistSelection.toggle(nodo);
+    /*
     if (nodo.item === 'GPS') {
       //console.log(nodo.item);
       //console.log(nodo);
       console.log(this.checklistSelection.isSelected(nodo));
-    }
+    }*/
     this.checkAllParentsSelection(nodo);
     this.obtenerJSON();
   }
