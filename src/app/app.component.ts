@@ -396,6 +396,11 @@ export class AppComponent {
     }*/
 
     this.checklistSelection.toggle(nodo);
+
+    if (nodo.require.length > 0 && this.checklistSelection.isSelected(nodo)) {
+      this.seleccionarRequire(nodo.require);
+    }
+
     /*
     if (nodo.item === 'GPS') {
       //console.log(nodo.item);
@@ -404,6 +409,46 @@ export class AppComponent {
     }*/
     this.checkAllParentsSelection(nodo);
     this.obtenerJSON();
+  }
+
+  /**
+   * Selecciona los nodos requeridos de otro nodo
+   * Se podría dar otra pasada, porque lo que ahora hago
+   * es buscar los nodos en el árbol original y comparar
+   * con lo guardado en el require, porque los nodos asignado
+   * aqui y en exclude por alguna razón cambian y el nodo original
+   * no se ajusta, así que tengo que volver a comparar
+   * @param requires 
+   */
+  seleccionarRequire(requires) {
+    const nodos = this.tree.treeControl.dataNodes;
+    
+    requires.forEach(require => {
+      nodos.forEach(nodo => {
+        if (nodo.item === require.item) {
+          console.log(nodo)
+          if (nodo.disabled && nodo.constraint === 'XOR') {
+            this.validarHermanos(nodo);
+          }
+          this.checklistSelection.select(nodo);
+        }
+      });
+    });
+  }
+
+  /**
+   * 
+   * @param {TodoItemFlatNode} nodo 
+   */
+  validarHermanos(nodo: TodoItemFlatNode) {
+    const padre = this.getParentNode(nodo);
+    const hijos = this.treeControl.getDescendants(padre);
+
+    hijos.forEach((hijo) => {
+      if (hijo !== nodo) {
+        this.checklistSelection.deselect(hijo);
+      }
+    });
   }
 
   /**
