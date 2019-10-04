@@ -429,9 +429,10 @@ export class AppComponent {
           console.log(nodo)
           if (nodo.disabled && nodo.constraint === 'XOR') {
             this.validarHermanos(nodo);
+            nodo.disabled = false; //Validado aqui, en otra parte puede causar problemas con mandatory
           }
           this.checklistSelection.select(nodo);
-          nodo.disabled = false;
+          
           console.log(nodo.disabled)
         }
       });
