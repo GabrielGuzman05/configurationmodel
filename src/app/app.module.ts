@@ -7,6 +7,8 @@ import { FormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
+import { SimpleNotificationsModule } from 'angular2-notifications';
+
 @NgModule({
   declarations: [
     AppComponent
@@ -14,6 +16,7 @@ import { AppComponent } from './app.component';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
+    SimpleNotificationsModule.forRoot(),
     AppRoutingModule,
     MatFormFieldModule,
     MatInputModule,

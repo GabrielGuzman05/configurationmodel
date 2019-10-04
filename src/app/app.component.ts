@@ -3,6 +3,7 @@ import { FlatTreeControl } from '@angular/cdk/tree';
 import { Component, Injectable, ViewChild } from '@angular/core';
 import { MatTreeFlatDataSource, MatTreeFlattener } from '@angular/material/tree';
 import { BehaviorSubject } from 'rxjs';
+import { NotificationsService } from 'angular2-notifications';
 
 declare var buildJson: any;
 /**
@@ -93,6 +94,15 @@ export class AppComponent {
   exclude = [];
   jsonReglas = [];
 
+  public options = {
+      position: ['top', 'right'],
+      lastOnBottom: true,
+      timeOut: 5000,
+      showProgressBar: true,
+      pauseOnHover: true,
+      clickToClose: true
+  };
+
   @ViewChild('tree') tree;
   
   /** Map from flat node to nested node. This helps us finding the nested node to be modified */
@@ -113,7 +123,8 @@ export class AppComponent {
   /** The selection for checklist */
   checklistSelection = new SelectionModel<TodoItemFlatNode>(true /* multiple */);
 
-  constructor(private database: ChecklistDatabase) {
+  constructor(private database: ChecklistDatabase,
+              private _notificationsService: NotificationsService) {
     this.treeFlattener = new MatTreeFlattener(this.transformer, this.getLevel,
     this.isExpandable, this.getChildren);
     this.treeControl = new FlatTreeControl<TodoItemFlatNode>(this.getLevel, this.isExpandable);
@@ -431,9 +442,11 @@ export class AppComponent {
             this.validarHermanos(nodo);
             nodo.disabled = false; //Validado aqui, en otra parte puede causar problemas con mandatory
           }
-          this.checklistSelection.select(nodo);
-          
-          console.log(nodo.disabled)
+
+          if (!this.checklistSelection.isSelected(nodo)) {
+            this._notificationsService.info('Información', 'Característica ' + nodo.item + ' seleccionada automáticamente');
+            this.checklistSelection.select(nodo);
+          }
         }
       });
     });
@@ -444,12 +457,12 @@ export class AppComponent {
    * @param {TodoItemFlatNode} nodo 
    */
   validarHermanos(nodo: TodoItemFlatNode) {
-    console.log(nodo.disabled)
     const padre = this.getParentNode(nodo);
     const hijos = this.treeControl.getDescendants(padre);
 
     hijos.forEach((hijo) => {
-      if (hijo !== nodo) {
+      if (hijo !== nodo && hijo.level === nodo.level && this.checklistSelection.isSelected(hijo)) {
+        this._notificationsService.alert('Alerta', 'Se deseleccionó automáticamente la característica ' + hijo.item);
         this.checklistSelection.deselect(hijo);
       }
     });
