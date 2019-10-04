@@ -431,6 +431,8 @@ export class AppComponent {
             this.validarHermanos(nodo);
           }
           this.checklistSelection.select(nodo);
+          nodo.disabled = false;
+          console.log(nodo.disabled)
         }
       });
     });
@@ -441,6 +443,7 @@ export class AppComponent {
    * @param {TodoItemFlatNode} nodo 
    */
   validarHermanos(nodo: TodoItemFlatNode) {
+    console.log(nodo.disabled)
     const padre = this.getParentNode(nodo);
     const hijos = this.treeControl.getDescendants(padre);
 
