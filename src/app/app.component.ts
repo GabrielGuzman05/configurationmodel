@@ -264,7 +264,14 @@ export class AppComponent {
     let parent: TodoItemFlatNode | null = this.getParentNode(node);
 
     while (parent) {
+      if (parent.require.length > 0 && !this.checklistSelection.isSelected(parent)) {
+        console.log(parent.require[0].item)
+        console.log("entré aquí")
+        this.seleccionarRequire(parent.require);
+      }
+
       this.checklistSelection.select(parent);
+
       parent = this.getParentNode(parent);
     }
   }
@@ -398,7 +405,7 @@ export class AppComponent {
    * @param {TodoItemFlatNode} nodo 
    */
   seleccionarNodo(nodo: TodoItemFlatNode) {
-    console.log(nodo)
+    //console.log(nodo)
     /*
     if (nodo.item === 'GPS') {
       console.log(nodo.item);
@@ -434,6 +441,7 @@ export class AppComponent {
   seleccionarRequire(requires) {
     const nodos = this.tree.treeControl.dataNodes;
     
+    console.log(requires)
     requires.forEach(require => {
       nodos.forEach(nodo => {
         if (nodo.item === require.item) {
