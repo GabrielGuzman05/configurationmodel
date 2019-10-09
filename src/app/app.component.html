@@ -45,7 +45,8 @@
             <mat-checkbox class="checklist-leaf-node"
                         [disabled]="deshabilitarMandatory(node) || deshabilitarXOR(node) || deshabilitarNodo(node)"
                         [checked]="checklistSelection.isSelected(node)"
-                        (change)="seleccionarNodo(node)">{{node.item}}
+                        (change)="seleccionarNodo(node)">
+                        {{node.item}}
             </mat-checkbox>
         </mat-tree-node>
 
@@ -54,14 +55,19 @@
                         [disabled]="deshabilitarMandatory(node) || deshabilitarXOR(node) || deshabilitarNodo(node)"
                         [checked]="checklistSelection.isSelected(node)"
                         [indeterminate]="validacionInicial(0)"
-                        (change)="seleccionarNodo(node)">{{node.item}}</mat-checkbox>
-            <span *ngIf="node.level === 0">{{node.item}}</span>
+                        (change)="seleccionarNodo(node)">
+                        {{node.item}}
+            </mat-checkbox>
+            <span *ngIf="node.level === 0">
+                {{node.item}}
+            </span>
             <button mat-icon-button matTreeNodeToggle
                     [attr.aria-label]="'toggle ' + node.filename">
-            <mat-icon class="mat-icon-rtl-mirror">
-                {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
-            </mat-icon>
+                <mat-icon class="mat-icon-rtl-mirror">
+                    {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+                </mat-icon>
             </button>
+            <span *ngIf="node.alerta" style="color: red">{{node.alerta}}</span>
         </mat-tree-node>
 	</mat-tree>
 

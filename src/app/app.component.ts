@@ -24,6 +24,7 @@ export class TodoItemFlatNode {
   esRequerido: any[];
   exclude: any[];
   disabled: boolean;
+  alerta: string;
 }
 
 /**
@@ -151,7 +152,9 @@ export class AppComponent {
 
   getDisabled = (node: TodoItemFlatNode) => node.disabled;
 
-  getEsRequerido = (node:TodoItemFlatNode) => node.esRequerido;
+  getEsRequerido = (node: TodoItemFlatNode) => node.esRequerido;
+
+  getAlerta = (node: TodoItemFlatNode) => node.alerta;
 
   isExpandable = (node: TodoItemFlatNode) => node.expandable;
 
@@ -177,6 +180,7 @@ export class AppComponent {
     flatNode.esRequerido = [];
     flatNode.exclude = [];
     flatNode.disabled = false;
+    flatNode.alerta = null;
     flatNode.expandable = !!node.children;
     this.flatNodeMap.set(flatNode, node);
     this.nestedNodeMap.set(node, flatNode);
@@ -415,6 +419,7 @@ export class AppComponent {
    * @param {TodoItemFlatNode} nodo 
    */
   seleccionarNodo(nodo: TodoItemFlatNode) {
+    console.log(nodo)
 
     this.checklistSelection.toggle(nodo);
 
@@ -481,18 +486,17 @@ export class AppComponent {
     });
   }
 
+  /**
+   * Se valida que se deseleccionen los nodos que excluye el
+   * nodo que se está seleccionando
+   * @param excludes
+   */
   seleccionarNodoExclude(excludes) {
     const nodos = this.tree.treeControl.dataNodes;
     
     excludes.forEach(exclude => {
       nodos.forEach(nodo => {
         if (nodo.item === exclude.item) {
-
-          /*
-          if (nodo.disabled && nodo.constraint === 'XOR') {
-            this.validarHermanos(nodo);
-            nodo.disabled = false; //Validado aqui, en otra parte puede causar problemas con mandatory
-          }*/
 
           if (this.checklistSelection.isSelected(nodo)) {
             this._notificationsService.alert('Alerta', 'Característica ' + nodo.item + ' deseleccionada automáticamente');
@@ -505,7 +509,7 @@ export class AppComponent {
   }
 
   /**
-   * 
+   * Se valida que solo haya uno seleccionado cuando es XOR
    * @param {TodoItemFlatNode} nodo 
    */
   validarHermanos(nodo: TodoItemFlatNode) {
@@ -516,6 +520,29 @@ export class AppComponent {
       if (hijo !== nodo && hijo.level === nodo.level && this.checklistSelection.isSelected(hijo)) {
         this._notificationsService.alert('Alerta', 'Se deseleccionó automáticamente la característica ' + hijo.item);
         this.checklistSelection.deselect(hijo);
+      }
+    });
+  }
+
+  comprobarSeleccionNodos() {
+    const nodos = this.tree.treeControl.dataNodes;
+
+    nodos.forEach(nodo => {
+      if (this.checklistSelection.isSelected(nodo)) {
+        const hijos = this.treeControl.getDescendants(nodo);
+        let seleccionado = false;
+
+        hijos.forEach(hijo => {
+          if (this.checklistSelection.isSelected(hijo)) {
+            seleccionado = true;
+          }
+        });
+
+        if (!seleccionado) {
+          nodo.alerta = 'Tienes que seleccionar alguna opción';
+        } else {
+          nodo.alerta = null;
+        }
       }
     });
   }
@@ -572,6 +599,7 @@ export class AppComponent {
    * Obtiene un JSON inicial a partir de los nodos
    */
   obtenerJSON() {
+    this.comprobarSeleccionNodos();
     const nodos = this.tree.treeControl.dataNodes;
     this.jsonReglas = [];
     nodos.forEach(nodo => {
