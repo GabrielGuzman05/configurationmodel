@@ -21,6 +21,7 @@ export class TodoItemFlatNode {
   expandable: boolean;
   constraint: string;
   require: any[];
+  esRequerido: any[];
   exclude: any[];
   disabled: boolean;
 }
@@ -150,6 +151,8 @@ export class AppComponent {
 
   getDisabled = (node: TodoItemFlatNode) => node.disabled;
 
+  getEsRequerido = (node:TodoItemFlatNode) => node.esRequerido;
+
   isExpandable = (node: TodoItemFlatNode) => node.expandable;
 
   getChildren = (node: TodoItemNode): TodoItemNode[] => node.children;
@@ -171,6 +174,7 @@ export class AppComponent {
     flatNode.level = level;
     flatNode.constraint = null;
     flatNode.require = [];
+    flatNode.esRequerido = [];
     flatNode.exclude = [];
     flatNode.disabled = false;
     flatNode.expandable = !!node.children;
@@ -241,32 +245,39 @@ export class AppComponent {
         require['nodoOrigen'] = node;
       }
 
+      if ( require['destino'] === node.item ) {
+        require['nodoDestino'] = node;
+      }
+
       this.asignarNodosRequire(node, require);
     });
   }
 
   /**
    * Se aplican las restricciones a los nodos correspondientes
-   * @param node 
+   * @param node
    * @param require
    */
   asignarNodosRequire(node: TodoItemFlatNode, require) {
     if ( require['nodoOrigen'] && require['destino'] === node.item ) {
       node.require.push(require['nodoOrigen']);
     }
+
+    if ( require['nodoDestino'] && require['origen'] === node.item) {
+      node.esRequerido.push(require['nodoDestino']);
+    }
   }
 
   /**
    * Al seleccionar un hijo, los padres deben seleccionarse
-   * de manera automática
+   * de manera automática. En caso de que uno de esos padres
+   * requiera de algún nodo, se hace la validación
    */
   checkAllParentsSelection(node: TodoItemFlatNode): void {
     let parent: TodoItemFlatNode | null = this.getParentNode(node);
 
     while (parent) {
       if (parent.require.length > 0 && !this.checklistSelection.isSelected(parent)) {
-        console.log(parent.require[0].item)
-        console.log("entré aquí")
         this.seleccionarRequire(parent.require);
       }
 
@@ -339,7 +350,6 @@ export class AppComponent {
    */
   construirRequireOrExclude(instancias, origen) {
     instancias.forEach(instancia => {
-      console.log(instancia)
       const json = {
         origen: origen,
         nodo: instancia[0],
@@ -405,13 +415,6 @@ export class AppComponent {
    * @param {TodoItemFlatNode} nodo 
    */
   seleccionarNodo(nodo: TodoItemFlatNode) {
-    //console.log(nodo)
-    /*
-    if (nodo.item === 'GPS') {
-      console.log(nodo.item);
-      console.log(nodo);
-      console.log(this.checklistSelection.isSelected(nodo));
-    }*/
 
     this.checklistSelection.toggle(nodo);
 
@@ -419,12 +422,10 @@ export class AppComponent {
       this.seleccionarRequire(nodo.require);
     }
 
-    /*
-    if (nodo.item === 'GPS') {
-      //console.log(nodo.item);
-      //console.log(nodo);
-      console.log(this.checklistSelection.isSelected(nodo));
-    }*/
+    if (nodo.esRequerido.length > 0 && !this.checklistSelection.isSelected(nodo)) {
+      this.deseleccionarNodoRequerido(nodo.esRequerido);
+    }
+
     this.checkAllParentsSelection(nodo);
     this.obtenerJSON();
   }
@@ -441,11 +442,9 @@ export class AppComponent {
   seleccionarRequire(requires) {
     const nodos = this.tree.treeControl.dataNodes;
     
-    console.log(requires)
     requires.forEach(require => {
       nodos.forEach(nodo => {
         if (nodo.item === require.item) {
-          console.log(nodo)
           if (nodo.disabled && nodo.constraint === 'XOR') {
             this.validarHermanos(nodo);
             nodo.disabled = false; //Validado aqui, en otra parte puede causar problemas con mandatory
@@ -455,6 +454,35 @@ export class AppComponent {
             this._notificationsService.info('Información', 'Característica ' + nodo.item + ' seleccionada automáticamente');
             this.checklistSelection.select(nodo);
           }
+        }
+      });
+    });
+  }
+
+  /**
+   * Se aplica la validación necesaria al deseleccionar
+   * un nodo que es requerido por otro nodo
+   * @param requires 
+   */
+  deseleccionarNodoRequerido(requires) {
+    const nodos = this.tree.treeControl.dataNodes;
+    
+    requires.forEach(require => {
+      nodos.forEach(nodo => {
+        if (nodo.item === require.item) {
+          this._notificationsService.alert('Alerta', 'Se deseleccionó automáticamente la característica ' + nodo.item);
+          this.checklistSelection.deselect(nodo);
+          
+          /*
+          if (nodo.disabled && nodo.constraint === 'XOR') {
+            this.validarHermanos(nodo);
+            nodo.disabled = false; //Validado aqui, en otra parte puede causar problemas con mandatory
+          }
+
+          if (!this.checklistSelection.isSelected(nodo)) {
+            this._notificationsService.info('Información', 'Característica ' + nodo.item + ' seleccionada automáticamente');
+            this.checklistSelection.select(nodo);
+          } */
         }
       });
     });
