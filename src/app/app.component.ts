@@ -532,16 +532,18 @@ export class AppComponent {
         const hijos = this.treeControl.getDescendants(nodo);
         let seleccionado = false;
 
-        hijos.forEach(hijo => {
-          if (this.checklistSelection.isSelected(hijo)) {
-            seleccionado = true;
-          }
-        });
+        if (hijos.length !== 0 && ( hijos[0].constraint === 'XOR' || hijos[0].constraint === 'OR') ) {
+          hijos.forEach(hijo => {
+            if (this.checklistSelection.isSelected(hijo)) {
+              seleccionado = true;
+            }
+          });
 
-        if (!seleccionado) {
-          nodo.alerta = 'Tienes que seleccionar alguna opción';
-        } else {
-          nodo.alerta = null;
+          if (!seleccionado) {
+            nodo.alerta = 'Tienes que seleccionar alguna opción';
+          } else {
+            nodo.alerta = null;
+          }
         }
       }
     });
