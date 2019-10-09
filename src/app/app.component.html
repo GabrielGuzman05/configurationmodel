@@ -43,7 +43,7 @@
 	<mat-tree #tree [dataSource]="dataSource" [treeControl]="treeControl">
 	    <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
             <mat-checkbox class="checklist-leaf-node"
-                        [disabled]="deshabilitarMandatory(node) || deshabilitarXOR(node) || deshabilitarNodo(node) || deshabilitarNodoExclude(node)"
+                        [disabled]="deshabilitarMandatory(node) || deshabilitarXOR(node) || deshabilitarNodo(node)"
                         [checked]="checklistSelection.isSelected(node)"
                         (change)="seleccionarNodo(node)">{{node.item}}
             </mat-checkbox>
@@ -51,7 +51,7 @@
 
 	    <mat-tree-node *matTreeNodeDef="let node; when: hasChild" matTreeNodePadding>	    
             <mat-checkbox *ngIf="node.level !== 0"
-                        [disabled]="deshabilitarMandatory(node) || deshabilitarXOR(node) || deshabilitarNodo(node) || deshabilitarNodoExclude(node)"
+                        [disabled]="deshabilitarMandatory(node) || deshabilitarXOR(node) || deshabilitarNodo(node)"
                         [checked]="checklistSelection.isSelected(node)"
                         [indeterminate]="validacionInicial(0)"
                         (change)="seleccionarNodo(node)">{{node.item}}</mat-checkbox>

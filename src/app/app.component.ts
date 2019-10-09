@@ -426,6 +426,10 @@ export class AppComponent {
       this.deseleccionarNodoRequerido(nodo.esRequerido);
     }
 
+    if (nodo.exclude.length > 0 && this.checklistSelection.isSelected(nodo)) {
+      this.seleccionarNodoExclude(nodo.exclude);
+    }
+
     this.checkAllParentsSelection(nodo);
     this.obtenerJSON();
   }
@@ -466,23 +470,35 @@ export class AppComponent {
    */
   deseleccionarNodoRequerido(requires) {
     const nodos = this.tree.treeControl.dataNodes;
-    
+
     requires.forEach(require => {
       nodos.forEach(nodo => {
         if (nodo.item === require.item) {
           this._notificationsService.alert('Alerta', 'Se deseleccionó automáticamente la característica ' + nodo.item);
           this.checklistSelection.deselect(nodo);
-          
+        }
+      });
+    });
+  }
+
+  seleccionarNodoExclude(excludes) {
+    const nodos = this.tree.treeControl.dataNodes;
+    
+    excludes.forEach(exclude => {
+      nodos.forEach(nodo => {
+        if (nodo.item === exclude.item) {
+
           /*
           if (nodo.disabled && nodo.constraint === 'XOR') {
             this.validarHermanos(nodo);
             nodo.disabled = false; //Validado aqui, en otra parte puede causar problemas con mandatory
+          }*/
+
+          if (this.checklistSelection.isSelected(nodo)) {
+            this._notificationsService.alert('Alerta', 'Característica ' + nodo.item + ' deseleccionada automáticamente');
           }
 
-          if (!this.checklistSelection.isSelected(nodo)) {
-            this._notificationsService.info('Información', 'Característica ' + nodo.item + ' seleccionada automáticamente');
-            this.checklistSelection.select(nodo);
-          } */
+          this.checklistSelection.deselect(nodo);
         }
       });
     });
@@ -550,24 +566,6 @@ export class AppComponent {
     const padre = this.getParentNode(node);
     return (padre.disabled && !this.checklistSelection.isSelected(padre))
           ? node.disabled = true : node.disabled = false;
-  }
-
-  /**
-   * Si el nodo tiene un arreglo de exclude, se verifican que esos nodos esten
-   * o no seleccionados. Si estan seleccionados se bloquea el nodo que verificamos
-   * y si no, no se bloquea
-   * @param node 
-   */
-  deshabilitarNodoExclude(node: TodoItemFlatNode) {
-    let deshabilitar = false;
-    
-    node.exclude.forEach(nodo => {
-      if (this.checklistSelection.isSelected(nodo) && !this.checklistSelection.isSelected(node)) {
-        deshabilitar = true;
-      }
-    });
-
-    return node.disabled = deshabilitar;
   }
 
   /**
