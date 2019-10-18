@@ -91,6 +91,7 @@ export class ChecklistDatabase {
 export class AppComponent {
   title = 'Propuesta de modelos de configuración';
   jsonCompleto = {};
+  jsonEstadisticas = null;
   restricciones = [];
   require = [];
   exclude = [];
@@ -320,7 +321,9 @@ export class AppComponent {
   configurarJSON() {
     const instancias = JSON.parse(localStorage.getItem('datos'));
     this.construirRestricciones(instancias);
-
+    this.construirEstadisticas(instancias);
+    
+    console.log(instancias)
     this.jsonCompleto[instancias[0][0]] = {};
 
     for ( let i = 1; i < instancias.length; i++ ) {
@@ -345,6 +348,39 @@ export class AppComponent {
       if (instancias[i][5].length !== 0) {
         this.construirRequireOrExclude(instancias[i][5], instancias[i][0]);
       }
+    }
+  }
+
+  /**
+   * Se obtienen de las instancias, los datos necesarios para construir una tabla
+   * con las estadisticas del modelo de caracteristicas
+   * @param instancias 
+   */
+  construirEstadisticas(instancias) {
+    this.jsonEstadisticas = {
+      cantidad: instancias.length
+    };
+
+    instancias.forEach(instancia => {
+      this.calcularEstadistica(instancia[2]);
+
+      if (instancia[5].length > 0) {
+        instancia[5].forEach(inst => {
+          this.calcularEstadistica(inst[0]);
+        });
+      }
+    });
+  }
+
+  /**
+   * Iniciar o sumar los valores de los nodos que corresponden
+   * @param instancia
+   */
+  calcularEstadistica(instancia) {
+    if (!this.jsonEstadisticas[instancia]) {
+      this.jsonEstadisticas[instancia] = 1;
+    } else {
+      this.jsonEstadisticas[instancia]++;
     }
   }
 
@@ -611,9 +647,6 @@ export class AppComponent {
       }
       this.jsonReglas.push(objeto);
     });
-
-    console.log(this.require)
-    console.log(this.exclude)
   }
 
   /**

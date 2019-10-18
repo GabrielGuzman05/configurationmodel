@@ -90,6 +90,27 @@
         </div>
     </div>
 
+    <div *ngIf="jsonEstadisticas"
+         class="restricciones">
+        RESUMEN DE MODELO DE CARACTERÍSTICAS
+        
+        <div>
+            <span class="negrita">Características: </span> {{jsonEstadisticas.cantidad}}
+            <br>
+            <span class="negrita">Obligatorios: </span> {{jsonEstadisticas['Mandatory'] ? jsonEstadisticas['Mandatory'] : 0}}
+            <br>
+            <span class="negrita">Opcionales: </span> {{jsonEstadisticas['Optional'] ? jsonEstadisticas['Optional'] : 0}}
+            <br>
+            <span class="negrita">XOR: </span> {{jsonEstadisticas['XOR'] ? jsonEstadisticas['XOR'] : 0}}
+            <br>
+            <span class="negrita">OR: </span> {{jsonEstadisticas['OR'] ? jsonEstadisticas['OR'] : 0}}
+            <br>
+            <span class="negrita">Excluye: </span> {{jsonEstadisticas['Excludes'] ? jsonEstadisticas['Excludes'] : 0}}
+            <br>
+            <span class="negrita">Requiere: </span> {{jsonEstadisticas['Requires'] ? jsonEstadisticas['Requires'] : 0}}
+        </div>
+    </div>
+    
     <div>
         {{jsonReglas | json}}
     </div>
