@@ -73,6 +73,23 @@
 
 
     <button class="btn btn-success" (click)="obtenerJSON()">Crear JSON</button>
+    
+    <div *ngIf="require.length > 0"
+         class="restricciones">
+        <span class="negrita">Restricciones "Requiere"</span>
+        <div *ngFor="let req of require;">
+            La característica {{req.origen}} requiere a la característica {{req.destino}}
+        </div>
+    </div>
+    
+    <div *ngIf="exclude.length > 0"
+         class="restricciones">
+        <span class="negrita">Restricciones "Excluye"</span>
+        <div *ngFor="let exc of exclude;">
+            La característica {{exc.origen}} excluye a la característica {{exc.destino}}        
+        </div>
+    </div>
+
     <div>
         {{jsonReglas | json}}
     </div>

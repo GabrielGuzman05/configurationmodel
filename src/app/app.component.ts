@@ -611,6 +611,9 @@ export class AppComponent {
       }
       this.jsonReglas.push(objeto);
     });
+
+    console.log(this.require)
+    console.log(this.exclude)
   }
 
   /**
