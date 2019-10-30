@@ -81,6 +81,12 @@
             La configuración no es válida, revisar selección
         </span>
     </div>
+
+    <button *ngIf="arbolValido"
+            class="btn btn-success pointer"
+            (click)="exportarReglas()">
+            Exportar reglas
+    </button>
     
     
     <div *ngIf="require.length > 0"

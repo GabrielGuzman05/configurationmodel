@@ -96,7 +96,7 @@ export class AppComponent {
   restricciones = [];
   require = [];
   exclude = [];
-  jsonReglas = [];
+  modeloConfiguracion = [];
   arbolValido = null;
 
   public options = {
@@ -646,7 +646,7 @@ export class AppComponent {
   obtenerJSON() {
     const nodos = this.tree.treeControl.dataNodes;
     this.arbolValido = this.comprobarSeleccionNodos();
-    this.jsonReglas = [];
+    this.modeloConfiguracion = [];
 
     nodos.forEach(nodo => {
       console.log(nodo)
@@ -662,7 +662,7 @@ export class AppComponent {
         tipo           : nodo.constraint,
         seleccionada   : this.checklistSelection.isSelected(nodo)
       }
-      this.jsonReglas.push(objeto);
+      this.modeloConfiguracion.push(objeto);
     });
   }
 
@@ -690,8 +690,27 @@ export class AppComponent {
   descargarJSON() {
     const fileName = 'modeloDeConfiguracion';
     const exportType = 'json';
-    const reglas = this.jsonReglas;
-    exportFromJSON({ data: reglas, fileName: fileName, exportType: exportType })
+    exportFromJSON({ data: this.modeloConfiguracion,
+                     fileName: fileName,
+                     exportType: exportType });
+  }
+
+  /**
+   * Exportar reglas
+   */
+  exportarReglas() {
+    const nodos = this.tree.treeControl.dataNodes;
+    const reglas = [];
+
+    nodos.forEach(nodo => {
+      const objeto = {
+        caracteristica : nodo.item,
+        seleccionada   : this.checklistSelection.isSelected(nodo)
+      }
+      reglas.push(objeto);
+    });
+
+    exportFromJSON({ data: reglas, fileName: 'reglas', exportType: 'json' });
   }
 
   /**
