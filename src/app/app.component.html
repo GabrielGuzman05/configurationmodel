@@ -71,8 +71,17 @@
         </mat-tree-node>
 	</mat-tree>
 
-
-    <button class="btn btn-success" (click)="obtenerJSON()">Crear JSON</button>
+    <div *ngIf="arbolValido !== null">
+        <button class="btn btn-success pointer"
+                (click)="descargarJSON()"
+                [disabled]="!arbolValido">
+                Descargar JSON
+        </button>
+        <span *ngIf="!arbolValido">
+            La configuración no es válida, revisar selección
+        </span>
+    </div>
+    
     
     <div *ngIf="require.length > 0"
          class="restricciones">

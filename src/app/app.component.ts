@@ -4,6 +4,7 @@ import { Component, Injectable, ViewChild } from '@angular/core';
 import { MatTreeFlatDataSource, MatTreeFlattener } from '@angular/material/tree';
 import { BehaviorSubject } from 'rxjs';
 import { NotificationsService } from 'angular2-notifications';
+import exportFromJSON from 'export-from-json';
 
 declare var buildJson: any;
 /**
@@ -96,6 +97,7 @@ export class AppComponent {
   require = [];
   exclude = [];
   jsonReglas = [];
+  arbolValido = null;
 
   public options = {
       position: ['top', 'right'],
@@ -323,7 +325,6 @@ export class AppComponent {
     this.construirRestricciones(instancias);
     this.construirEstadisticas(instancias);
     
-    console.log(instancias)
     this.jsonCompleto[instancias[0][0]] = {};
 
     for ( let i = 1; i < instancias.length; i++ ) {
@@ -455,8 +456,6 @@ export class AppComponent {
    * @param {TodoItemFlatNode} nodo 
    */
   seleccionarNodo(nodo: TodoItemFlatNode) {
-    console.log(nodo)
-
     this.checklistSelection.toggle(nodo);
 
     if (nodo.require.length > 0 && this.checklistSelection.isSelected(nodo)) {
@@ -472,6 +471,7 @@ export class AppComponent {
     }
 
     this.checkAllParentsSelection(nodo);
+    this.comprobarSeleccionNodos();
     this.obtenerJSON();
   }
 
@@ -560,9 +560,13 @@ export class AppComponent {
     });
   }
 
+  /**
+   * Validar si hay algún nodo que no ha sido seleccionado y lo requiere
+   * @return valido
+   */
   comprobarSeleccionNodos() {
     const nodos = this.tree.treeControl.dataNodes;
-
+    let valido = true;
     nodos.forEach(nodo => {
       if (this.checklistSelection.isSelected(nodo)) {
         const hijos = this.treeControl.getDescendants(nodo);
@@ -577,12 +581,15 @@ export class AppComponent {
 
           if (!seleccionado) {
             nodo.alerta = 'Tienes que seleccionar alguna opción';
+            valido = false;
           } else {
             nodo.alerta = null;
           }
         }
       }
     });
+
+    return valido;
   }
 
   /**
@@ -637,16 +644,28 @@ export class AppComponent {
    * Obtiene un JSON inicial a partir de los nodos
    */
   obtenerJSON() {
-    this.comprobarSeleccionNodos();
     const nodos = this.tree.treeControl.dataNodes;
+    this.arbolValido = this.comprobarSeleccionNodos();
     this.jsonReglas = [];
+
     nodos.forEach(nodo => {
+      console.log(nodo)
       const objeto = {
-        'feature' : nodo.item,
-        'selected': this.checklistSelection.isSelected(nodo)
+        feature : nodo.item,
+        selected: this.checklistSelection.isSelected(nodo)
       }
       this.jsonReglas.push(objeto);
     });
+  }
+
+  /**
+   * Utilizado para descargar el archivo (se pueden mas formatos)
+   */
+  descargarJSON() {
+    const fileName = 'download';
+    const exportType = 'json';
+    const reglas = this.jsonReglas;
+    exportFromJSON({ data: reglas, fileName: fileName, exportType: exportType })
   }
 
   /**
