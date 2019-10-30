@@ -650,19 +650,45 @@ export class AppComponent {
 
     nodos.forEach(nodo => {
       console.log(nodo)
+      if (nodo.constraint === null) {
+        nodo.constraint = 'root';
+      }
+
       const objeto = {
-        feature : nodo.item,
-        selected: this.checklistSelection.isSelected(nodo)
+        caracteristica : nodo.item,
+        nivel          : nodo.level,
+        require        : this.obtenerNombres(nodo.require, 'item'),
+        excluye        : this.obtenerNombres(nodo.exclude, 'item'),
+        tipo           : nodo.constraint,
+        seleccionada   : this.checklistSelection.isSelected(nodo)
       }
       this.jsonReglas.push(objeto);
     });
   }
 
   /**
+   * Obtiene los nombres de un arreglo usando un atributo
+   * dado por el usuario
+   * 
+   * @param arreglo
+   * @param atributo
+   */
+  obtenerNombres(arreglo, atributo) {
+    const nombres = [];
+    if (arreglo.length !== 0) {
+      arreglo.forEach(elemento => {
+        nombres.push(elemento[atributo]);
+      });
+    }
+
+    return nombres;
+  }
+
+  /**
    * Utilizado para descargar el archivo (se pueden mas formatos)
    */
   descargarJSON() {
-    const fileName = 'download';
+    const fileName = 'modeloDeConfiguracion';
     const exportType = 'json';
     const reglas = this.jsonReglas;
     exportFromJSON({ data: reglas, fileName: fileName, exportType: exportType })

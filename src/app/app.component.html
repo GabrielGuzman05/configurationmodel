@@ -119,10 +119,6 @@
             <span class="negrita">Requiere: </span> {{jsonEstadisticas['Requires'] ? jsonEstadisticas['Requires'] : 0}}
         </div>
     </div>
-    
-    <div>
-        {{jsonReglas | json}}
-    </div>
 </div>
 <router-outlet></router-outlet>
 <simple-notifications [options]="options"></simple-notifications>
