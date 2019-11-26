@@ -67,7 +67,7 @@
                     {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
                 </mat-icon>
             </button>
-            <span *ngIf="node.alerta" style="color: red">{{node.alerta}}</span>
+            <span *ngIf="node.alerta !== null" style="color: red">{{node.alerta}}</span>
         </mat-tree-node>
 	</mat-tree>
 

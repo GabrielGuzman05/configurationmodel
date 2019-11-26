@@ -455,7 +455,7 @@ export class AppComponent {
    * 
    * @param {TodoItemFlatNode} nodo 
    */
-  seleccionarNodo(nodo: TodoItemFlatNode) {
+  async seleccionarNodo(nodo: TodoItemFlatNode) {
     this.checklistSelection.toggle(nodo);
 
     if (nodo.require.length > 0 && this.checklistSelection.isSelected(nodo)) {
@@ -514,7 +514,7 @@ export class AppComponent {
 
     requires.forEach(require => {
       nodos.forEach(nodo => {
-        if (nodo.item === require.item) {
+        if (nodo.item === require.item && this.checklistSelection.isSelected(require)) {
           this._notificationsService.alert('Alerta', 'Se deseleccionó automáticamente la característica ' + nodo.item);
           this.checklistSelection.deselect(nodo);
         }
@@ -586,6 +586,8 @@ export class AppComponent {
             nodo.alerta = null;
           }
         }
+      } else {
+        nodo.alerta = null;
       }
     });
 
@@ -649,7 +651,6 @@ export class AppComponent {
     this.modeloConfiguracion = [];
 
     nodos.forEach(nodo => {
-      console.log(nodo)
       if (nodo.constraint === null) {
         nodo.constraint = 'root';
       }
@@ -690,9 +691,15 @@ export class AppComponent {
   descargarJSON() {
     const fileName = 'modeloDeConfiguracion';
     const exportType = 'json';
-    exportFromJSON({ data: this.modeloConfiguracion,
-                     fileName: fileName,
-                     exportType: exportType });
+    this.arbolValido = this.comprobarSeleccionNodos();
+
+    if (this.arbolValido) {
+      exportFromJSON({ data: this.modeloConfiguracion,
+        fileName: fileName,
+        exportType: exportType });
+    } else {
+      this._notificationsService.info('Información', 'No se puede descargar, porque la configuración no es válida');
+    }
   }
 
   /**
@@ -702,15 +709,21 @@ export class AppComponent {
     const nodos = this.tree.treeControl.dataNodes;
     const reglas = [];
 
-    nodos.forEach(nodo => {
-      const objeto = {
-        caracteristica : nodo.item,
-        seleccionada   : this.checklistSelection.isSelected(nodo)
-      }
-      reglas.push(objeto);
-    });
+    this.arbolValido = this.comprobarSeleccionNodos();
 
-    exportFromJSON({ data: reglas, fileName: 'reglas', exportType: 'json' });
+    if (this.arbolValido) {
+      nodos.forEach(nodo => {
+        const objeto = {
+          caracteristica : nodo.item,
+          seleccionada   : this.checklistSelection.isSelected(nodo)
+        }
+        reglas.push(objeto);
+      });
+
+      exportFromJSON({ data: reglas, fileName: 'reglas', exportType: 'json' });
+    } else {
+      this._notificationsService.info('Información', 'No se puede descargar, porque la configuración no es válida');
+    }
   }
 
   /**
@@ -747,6 +760,7 @@ export class AppComponent {
           }
         } else {
           this.checklistSelection.deselect(nodo);
+          this.comprobarSeleccionNodos();
         }
 
         this.validacionInicial(level + 1, this.treeControl.getDescendants(nodo), padreFlag);
