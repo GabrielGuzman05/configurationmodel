@@ -514,7 +514,7 @@ export class AppComponent {
 
     requires.forEach(require => {
       nodos.forEach(nodo => {
-        if (nodo.item === require.item && this.checklistSelection.isSelected(require)) {
+        if (nodo.item === require.item && this.checklistSelection.isSelected(nodo)) {
           this._notificationsService.alert('Alerta', 'Se deseleccionó automáticamente la característica ' + nodo.item);
           this.checklistSelection.deselect(nodo);
         }

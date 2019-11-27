@@ -107,7 +107,6 @@ function linerequire(posicionIni, posicionEnd, flag){
     let y1 = (55 * parseInt(posicionI[2].split("cm") ));
     var posicionE = posicionEnd.split(":");
     let x2 = 55 * parseInt(posicionE[1].split("cm"))+75;
-    console.log(posicionE)
     let y2 = (55 * parseInt(posicionE[2].split("cm")));
     var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     if(flag==1){
