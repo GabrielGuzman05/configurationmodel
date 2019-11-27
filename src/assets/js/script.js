@@ -61,9 +61,9 @@ function dibujarOrXor(instancia, or) {
     orxor[3] = instancia[1];
 
     if (or === 0) {
-        orxor[4] = 'white';
-    } else {
         orxor[4] = 'black';
+    } else {
+        orxor[4] = 'white';
     }
 
     orxor[5] = false;
