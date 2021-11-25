@@ -8,10 +8,10 @@ var svgPrint = document.getElementById('svgcanvas');
 var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 svg.setAttribute('xlink', 'http://www.w3.org/1999/xlink');
 
-var openFile = function(event) {
+var openFile = function (event) {
     var input = event.target;
     var reader = new FileReader();
-    reader.onload = function(){
+    reader.onload = function () {
         text = reader.result;
         $("#xmlArea").val(text);
     }
@@ -33,17 +33,19 @@ function configurarInstancias(instancias) {
     for (var i = 0; i < instancias.length; i++) {
         instances[i] = new Array(6);
         instances[i][0] = instancias[i]._name;
-        
-        var posicion = instancias[i].ATTRIBUTE[0].__text;
-        
-        posicion = posicion.split("E ");
-        posicion = posicion[1].split("index");
-        instances[i][1] = posicion[0];
-        
+        //console.log(instancias[i]._name);
+        //var posicion = instancias[i].ATTRIBUTE[0].__text;
+
+        //posicion = posicion.split("E ");
+        //posicion = posicion[1].split("index");
+        instances[i][1] = 'x:' + instancias[i].mxCell.mxGeometry._x + ' y:' + instancias[i].mxCell.mxGeometry._y;
+
         //Relaciones require y exclude
         instances[i][5] = [];
 
-        svg.appendChild(instancesvg(instances[i][1], instances[i][0]));
+        //Agregar ID
+        instances[i][6] = instancias[i]._id;
+        //svg.appendChild(instancesvg(instances[i][1], instances[i][0]));
     }
 }
 
@@ -107,9 +109,11 @@ function dibujarExclude(conector, instancia, indice) {
 }
 
 function agregarConectores(conectores) {
+    //console.log(conectores.length);
+    var orAndAlernative = [];
     for (var i = 0; i < conectores.length; i++) {
         for (var j = 0; j < instances.length; j++) {
-            var comparet = instances[j][0].localeCompare(conectores[i].TO._instance);
+            var comparet = instances[j][6].localeCompare(conectores[i].mxCell._target);
             if (comparet === 0) {
                 var original = false;
                 var clase;
@@ -126,41 +130,51 @@ function agregarConectores(conectores) {
                     medidas = instances[j][4];
                 }
 
-                instances[j][2] = conectores[i]._class;
-                instances[j][3] = conectores[i].FROM._instance;
+                instances[j][2] = conectores[i]._type;
+
+                //set father
+                instances[j][3] = instances.find(ele => ele[6] === conectores[i].mxCell._source)[0];
+                if (instances[j][2].localeCompare("Alternative") === 0 || instances[j][2].localeCompare("Or") === 0) {
+                    var aux = Object.assign([], instances[j])
+                    orAndAlernative.push(aux);
+                    //break;
+                }
+                //console.log(instances[j][2]);
 
                 for (var k = 0; k < instances.length; k++) {
+
+                    //comparar entre nombre instances en var k y padre de instances en var j
                     var comparef = instances[k][0].localeCompare(instances[j][3]);
                     if (comparef === 0) {
                         instances[j][4] = instances[k][1];
-                        
+
                         var optional = instances[j][2].localeCompare("Optional");
                         var mandatory = instances[j][2].localeCompare("Mandatory");
-                        var xor = instances[j][2].localeCompare("XOR");
-                        var or = instances[j][2].localeCompare("OR");
+                        var xor = instances[j][2].localeCompare("Alternative");
+                        var or = instances[j][2].localeCompare("Or");
                         var require = instances[j][2].localeCompare("Requires");
                         var exclude = instances[j][2].localeCompare("Excludes");
 
                         if (mandatory === 0) {
-                            dibujarMandatoryOrOptional(instances[j], 'black');
+                            //dibujarMandatoryOrOptional(instances[j], 'black');
                         }
 
                         if (optional === 0) {
-                            dibujarMandatoryOrOptional(instances[j], 'white');
+                            //dibujarMandatoryOrOptional(instances[j], 'white');
                         }
 
                         if (or === 0 || xor === 0) {
-                            dibujarOrXor(instances[j], or);
+                            //dibujarOrXor(instances[j], or);
                         }
 
                         if (require === 0) {
                             instances[j][5].push([instances[j][2], instances[j][3], instances[j][4]]);
-                            dibujarRequire(conectores, instances[j], i);
+                            //dibujarRequire(conectores, instances[j], i);
                         }
 
                         if (exclude === 0) {
                             instances[j][5].push([instances[j][2], instances[j][3], instances[j][4]]);
-                            dibujarExclude(conectores, instances[j], i);
+                            //dibujarExclude(conectores, instances[j], i);
                         }
                     }
                 }
@@ -171,11 +185,20 @@ function agregarConectores(conectores) {
                     instances[j][3] = instancia;
                     instances[j][4] = medidas;
                 }
-                
+
                 info += instances[j][0] + " p: " + instances[j][1] + " t: " + instances[j][2] + " f: " + instances[j][3] + "p2: " + instances[j][4] + " /// ";
             }
         }
     }
+    orAndAlernative.forEach(auxORXOR => {
+        //console.log(auxORXOR);
+        instances.forEach(auxInstance => {
+            //console.log(auxInstance[0].localeCompare(auxORXOR[1]) === 0);
+            if ((auxInstance[0].localeCompare(auxORXOR[0]) === 0 || auxInstance[0].localeCompare(auxORXOR[3]) === 0) && auxInstance[2].localeCompare("Mandatory") === 0) {
+                auxInstance[2] = auxORXOR[2];
+            }
+        });
+    });
 }
 
 function agregarOrs() {
@@ -204,7 +227,7 @@ function agregarOrs() {
                         var post = ors[j][3].split(":");
                         let x1 = 55 * parseInt(post[1].split("cm"));
                         let y1 = 55 * parseInt(post[2].split("cm"));
-                        
+
                         if (firstElement) {
                             if (poligono[3] > y1) {
                                 poligono[3] = y1;
@@ -212,7 +235,7 @@ function agregarOrs() {
 
                             if (poligono[5] < y1) {
                                 poligono[5] = y1;
-                            
+
                             }
                             if (poligono[2] > x1) {
                                 poligono[2] = x1;
@@ -247,16 +270,21 @@ function buildJson() {
     var obj = JSON.parse(xml);
     $("#jsonArea").val(xml);
 
-    svgSize(obj);
-    configurarInstancias(obj.ADOXML.MODELS.MODEL.INSTANCE);
-    agregarConectores(obj.ADOXML.MODELS.MODEL.CONNECTOR);
+    //svgSize(obj);
+    configurarInstancias(obj.mxGraphModel.root.feature);
+    //console.log('Instancias listas');
+    agregarConectores(obj.mxGraphModel.root.relationship);
+    //console.log('Conectores Listos');
     agregarOrs();
+    //console.log('Ors Listos');
 
+    /*
     for (var i = 0; i < xors.length; i++) {
         svg.appendChild(orxorsvg(xors[i]));
     }
 
     svgPrint.appendChild(svg);
+    */
     $("#jsonArea2").val(info);
     localStorage.setItem('datos', JSON.stringify(instances));
 }

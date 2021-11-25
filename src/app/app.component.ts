@@ -305,7 +305,7 @@ export class AppComponent {
     }
 
     const startIndex = this.treeControl.dataNodes.indexOf(node) - 1;
-
+        
     for (let i = startIndex; i >= 0; i--) {
       const currentNode = this.treeControl.dataNodes[i];
 
@@ -322,6 +322,8 @@ export class AppComponent {
    */
   configurarJSON() {
     const instancias = JSON.parse(localStorage.getItem('datos'));
+    console.log(instancias);
+    
     this.construirRestricciones(instancias);
     this.construirEstadisticas(instancias);
     
@@ -397,7 +399,8 @@ export class AppComponent {
         destino: instancia[1],
         nodoAtributo: instancia[2]
       };
-
+      //console.log(json);
+      
       if (json['nodo'] === 'Requires') {
         this.require.push(json);
       } else if (json['nodo'] === 'Excludes') {
@@ -490,7 +493,7 @@ export class AppComponent {
     requires.forEach(require => {
       nodos.forEach(nodo => {
         if (nodo.item === require.item) {
-          if (nodo.disabled && nodo.constraint === 'XOR') {
+          if (nodo.disabled && nodo.constraint === 'Alternative') {
             this.validarHermanos(nodo);
             nodo.disabled = false; //Validado aqui, en otra parte puede causar problemas con mandatory
           }
@@ -572,7 +575,7 @@ export class AppComponent {
         const hijos = this.treeControl.getDescendants(nodo);
         let seleccionado = false;
 
-        if (hijos.length !== 0 && ( hijos[0].constraint === 'XOR' || hijos[0].constraint === 'OR') ) {
+        if (hijos.length !== 0 && ( hijos[0].constraint === 'Alternative' || hijos[0].constraint === 'Or') ) {
           hijos.forEach(hijo => {
             if (this.checklistSelection.isSelected(hijo)) {
               seleccionado = true;
@@ -599,7 +602,7 @@ export class AppComponent {
    * @param {TodoItemFlatNode} nodo 
    */
   deshabilitarXOR(nodo: TodoItemFlatNode) {
-    if (nodo.constraint === 'XOR' && !this.checklistSelection.isSelected(nodo)) {
+    if (nodo.constraint === 'Alternative' && !this.checklistSelection.isSelected(nodo)) {
       const padre = this.getParentNode(nodo);
       const hijos = this.treeControl.getDescendants(padre);
       nodo.disabled = false;
